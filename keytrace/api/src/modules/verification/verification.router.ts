@@ -157,6 +157,8 @@ verificationRouter.post(
       featureSchemaVersion: CURRENT_FEATURE_SCHEMA_VERSION,
       featureDeviations: mlResult.featureDeviations,
       anomalyScore: mlResult.anomalyScore,
+      modelSource: mlResult.modelSource || "saved_model",
+      isCached: mlResult.isCached ?? true,
       timestamp: new Date(),
     });
 

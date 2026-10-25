@@ -21,6 +21,7 @@ import {
   BarChart2,
   Clock,
   Sparkles,
+  HardDrive,
 } from "lucide-react";
 import {
   KeystrokeSessionPayload,
@@ -36,6 +37,11 @@ export function VerificationWorkspacePage() {
   const [evaluationHistory, setEvaluationHistory] = useState<any[]>([]);
   const [latestResult, setLatestResult] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const { data: statusData } = useQuery({
+    queryKey: ["enrollment-status"],
+    queryFn: () => api.enrollment.getStatus(),
+  });
 
   // Start session mutation
   const startSessionMutation = useMutation({
@@ -96,15 +102,26 @@ export function VerificationWorkspacePage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="cyan" className="shadow-[0_0_12px_rgba(6,182,212,0.25)]">Verification Telemetry</Badge>
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <Badge variant="cyan" glow>Verification Telemetry</Badge>
             {activeSessionId ? (
-              <Badge variant="match">
+              <Badge variant="match" glow>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 SESSION ACTIVE
               </Badge>
             ) : (
               <Badge variant="neutral">STANDBY</Badge>
+            )}
+            {statusData?.isModelBuilt ? (
+              <Badge variant="match" glow className="hidden sm:inline-flex">
+                <HardDrive className="w-3 h-3 mr-1 text-emerald-400" />
+                SAVED MODEL LOADED
+              </Badge>
+            ) : (
+              <Badge variant="review" glow className="hidden sm:inline-flex">
+                <Cpu className="w-3 h-3 mr-1 text-amber-400" />
+                MODEL FALLBACK
+              </Badge>
             )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-mono">
@@ -206,11 +223,20 @@ export function VerificationWorkspacePage() {
                   <span className="text-xs font-semibold text-foreground-subtle uppercase tracking-wider">
                     Most Recent Evaluation Result
                   </span>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-2.5 mt-1 flex-wrap">
                     <DecisionBadge decision={latestResult.decision} />
                     <span className="text-xs text-foreground-muted font-mono">
                       Event ID: {latestResult.eventId.slice(-8)}
                     </span>
+                    {latestResult.modelSource === "saved_model" ? (
+                      <Badge variant="cyan" glow className="text-[10px]">
+                        <HardDrive className="w-3 h-3 mr-1 text-cyan-400" /> FROM SAVED MODEL (ZERO RETRAIN)
+                      </Badge>
+                    ) : (
+                      <Badge variant="neutral" className="text-[10px]">
+                        LIVE COMPUTATION
+                      </Badge>
+                    )}
                   </div>
                 </div>
 

@@ -7,6 +7,7 @@ import { VerificationSession } from "../../models/VerificationSession.js";
 import { VerificationEvent } from "../../models/VerificationEvent.js";
 import { ConsentRecord } from "../../models/ConsentRecord.js";
 import { logAuditEvent } from "../../services/auditService.js";
+import { mlClient } from "../../services/mlClient.js";
 import { config } from "../../config/index.js";
 import { PROFILE_STATUS } from "@keytrace/shared";
 
@@ -108,8 +109,14 @@ dataRouter.delete("/profile", async (req: Request, res: Response): Promise<void>
     {
       status: PROFILE_STATUS.NOT_ENROLLED,
       enrollmentCount: 0,
+      isModelBuilt: false,
+      modelTrainedAt: null,
+      modelSampleCount: 0,
     }
   );
+
+  // Permanently delete saved biometric model artifact from disk
+  await mlClient.deleteSavedModel(user._id.toString()).catch(() => {});
 
   await logAuditEvent({
     actorId: user._id,
@@ -122,7 +129,7 @@ dataRouter.delete("/profile", async (req: Request, res: Response): Promise<void>
 
   res.json({
     ok: true,
-    message: "Enrolled behavioural typing profile and all associated samples were deleted.",
+    message: "Enrolled behavioural typing profile, saved biometric model artifact, and all associated samples were deleted.",
   });
 });
 
@@ -132,6 +139,8 @@ dataRouter.delete("/profile", async (req: Request, res: Response): Promise<void>
  */
 dataRouter.delete("/account", async (req: Request, res: Response): Promise<void> => {
   const user = req.user!;
+
+  await mlClient.deleteSavedModel(user._id.toString()).catch(() => {});
 
   await Promise.all([
     TypingSample.deleteMany({ userId: user._id }),

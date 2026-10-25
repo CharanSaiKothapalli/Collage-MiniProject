@@ -6,6 +6,7 @@ import { TypingSample } from "../../models/TypingSample.js";
 import { ConsentRecord } from "../../models/ConsentRecord.js";
 import { extractFeaturesFromTiming } from "../../services/featureExtractor.js";
 import { logAuditEvent } from "../../services/auditService.js";
+import { mlClient } from "../../services/mlClient.js";
 import {
   KeystrokeSessionPayloadSchema,
   ENROLLMENT_THRESHOLDS,
@@ -49,6 +50,7 @@ enrollmentRouter.post(
         userId: user._id,
         status: PROFILE_STATUS.ENROLLING,
         enrollmentCount: 0,
+        isModelBuilt: false,
       });
     }
 
@@ -98,8 +100,27 @@ enrollmentRouter.post(
     });
 
     profile.enrollmentCount = newCount;
+    let modelBuildResult = null;
+
+    // Automatically build & save the model completely once required baseline samples exist
     if (newCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
       profile.status = PROFILE_STATUS.READY_FOR_TESTING;
+      try {
+        const allSamples = await TypingSample.find({
+          userId: user._id,
+          qualityStatus: { $ne: "rejected" },
+        }).sort({ createdAt: -1 });
+        const featureVectors = allSamples.map((s) => s.featureVector);
+
+        modelBuildResult = await mlClient.buildAndSaveModel(user._id.toString(), featureVectors);
+        profile.isModelBuilt = true;
+        profile.modelTrainedAt = new Date(modelBuildResult.trainedAt);
+        profile.modelSampleCount = modelBuildResult.sampleCount;
+        profile.stabilityScore = modelBuildResult.trainingMetrics?.stability_score;
+        profile.calibratedThreshold = modelBuildResult.calibratedThreshold;
+      } catch (err: any) {
+        console.error("Auto model build error during enrollment:", err.message);
+      }
     } else {
       profile.status = PROFILE_STATUS.ENROLLING;
     }
@@ -112,14 +133,14 @@ enrollmentRouter.post(
       resourceType: "TypingSample",
       resourceId: sample._id.toString(),
       ipAddress: req.ip,
-      metadata: { sampleCount: newCount, qualityStatus },
+      metadata: { sampleCount: newCount, qualityStatus, isModelBuilt: profile.isModelBuilt },
     });
 
     res.status(201).json({
       ok: true,
       message:
         newCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED
-          ? "Enrolment complete! Profile is ready for behavioural verification."
+          ? "Enrolment complete! Model built and saved. Profile is ready for instant verification."
           : `Sample ${newCount} of ${ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} saved successfully.`,
       sampleId: sample._id,
       count: newCount,
@@ -127,9 +148,80 @@ enrollmentRouter.post(
       profileStatus: profile.status,
       qualityStatus,
       features,
+      isModelBuilt: profile.isModelBuilt,
+      modelTrainedAt: profile.modelTrainedAt,
+      modelBuildResult,
     });
   }
 );
+
+/**
+ * POST /api/v1/enrollment/build-model
+ * Explicitly trains and serializes the user's keystroke biometric model to disk.
+ * Subsequent verifications will use the saved model with zero re-training.
+ */
+enrollmentRouter.post("/build-model", async (req: Request, res: Response): Promise<void> => {
+  const user = req.user!;
+  let profile = await TypingProfile.findOne({ userId: user._id });
+  const samples = await TypingSample.find({
+    userId: user._id,
+    qualityStatus: { $ne: "rejected" },
+  }).sort({ createdAt: -1 });
+
+  if (samples.length === 0) {
+    res.status(400).json({
+      ok: false,
+      error: "No enrolled samples available to build biometric model. Please record enrollment samples first.",
+      code: "NO_SAMPLES",
+    });
+    return;
+  }
+
+  try {
+    const featureVectors = samples.map((s) => s.featureVector);
+    const buildResult = await mlClient.buildAndSaveModel(user._id.toString(), featureVectors);
+
+    if (!profile) {
+      profile = await TypingProfile.create({
+        userId: user._id,
+        status: samples.length >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED ? PROFILE_STATUS.READY_FOR_TESTING : PROFILE_STATUS.ENROLLING,
+        enrollmentCount: samples.length,
+      });
+    }
+
+    profile.isModelBuilt = true;
+    profile.modelTrainedAt = new Date(buildResult.trainedAt);
+    profile.modelSampleCount = buildResult.sampleCount;
+    profile.stabilityScore = buildResult.trainingMetrics?.stability_score;
+    profile.calibratedThreshold = buildResult.calibratedThreshold;
+    if (samples.length >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
+      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
+    }
+    await profile.save();
+
+    await logAuditEvent({
+      actorId: user._id,
+      actorUsername: user.username,
+      action: "MODEL_BUILT_AND_SAVED",
+      resourceType: "TypingProfile",
+      resourceId: profile._id.toString(),
+      ipAddress: req.ip,
+      metadata: { sampleCount: buildResult.sampleCount, savedPath: buildResult.savedPath },
+    });
+
+    res.json({
+      ok: true,
+      message: "Biometric model built and saved completely. Future verifications will run from this saved model without retraining.",
+      buildResult,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      ok: false,
+      error: err.message || "Failed to build and save model.",
+      code: "BUILD_FAILED",
+    });
+  }
+});
 
 /**
  * GET /api/v1/enrollment/status
@@ -148,6 +240,10 @@ enrollmentRouter.get("/status", async (req: Request, res: Response): Promise<voi
     totalRecorded: totalSamples,
     required: ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED,
     isReady: (profile?.enrollmentCount || 0) >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED,
+    isModelBuilt: profile?.isModelBuilt || false,
+    modelTrainedAt: profile?.modelTrainedAt,
+    stabilityScore: profile?.stabilityScore,
+    calibratedThreshold: profile?.calibratedThreshold,
   });
 });
 
@@ -197,6 +293,9 @@ enrollmentRouter.delete("/samples/:sampleId", async (req: Request, res: Response
     profile.enrollmentCount = count;
     if (count < ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
       profile.status = count === 0 ? PROFILE_STATUS.NOT_ENROLLED : PROFILE_STATUS.NEEDS_MORE_DATA;
+      profile.isModelBuilt = false;
+      // Invalidate saved model if sample count dropped below required
+      await mlClient.deleteSavedModel(user._id.toString()).catch(() => {});
     }
     await profile.save();
   }
@@ -215,6 +314,7 @@ enrollmentRouter.delete("/samples/:sampleId", async (req: Request, res: Response
     message: "Enrolment sample deleted.",
     remainingCount: count,
     profileStatus: profile?.status,
+    isModelBuilt: profile?.isModelBuilt || false,
   });
 });
 
@@ -224,10 +324,12 @@ enrollmentRouter.delete("/samples/:sampleId", async (req: Request, res: Response
 enrollmentRouter.post("/finalize", async (req: Request, res: Response): Promise<void> => {
   const user = req.user!;
   const profile = await TypingProfile.findOne({ userId: user._id });
-  const count = await TypingSample.countDocuments({
+  const samples = await TypingSample.find({
     userId: user._id,
     qualityStatus: "valid",
-  });
+  }).sort({ createdAt: -1 });
+
+  const count = samples.length;
 
   if (count < ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
     res.status(400).json({
@@ -238,15 +340,40 @@ enrollmentRouter.post("/finalize", async (req: Request, res: Response): Promise<
     return;
   }
 
-  if (profile) {
-    profile.status = PROFILE_STATUS.READY_FOR_TESTING;
-    profile.enrollmentCount = count;
-    await profile.save();
-  }
+  // Ensure model is built and saved completely
+  try {
+    const featureVectors = samples.map((s) => s.featureVector);
+    const buildResult = await mlClient.buildAndSaveModel(user._id.toString(), featureVectors);
 
-  res.json({
-    ok: true,
-    message: "Enrolment finalised. Behavioural profile is ready.",
-    profileStatus: PROFILE_STATUS.READY_FOR_TESTING,
-  });
+    if (profile) {
+      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
+      profile.enrollmentCount = count;
+      profile.isModelBuilt = true;
+      profile.modelTrainedAt = new Date(buildResult.trainedAt);
+      profile.modelSampleCount = buildResult.sampleCount;
+      profile.stabilityScore = buildResult.trainingMetrics?.stability_score;
+      profile.calibratedThreshold = buildResult.calibratedThreshold;
+      await profile.save();
+    }
+
+    res.json({
+      ok: true,
+      message: "Enrolment finalised. Biometric model built and saved completely.",
+      profileStatus: PROFILE_STATUS.READY_FOR_TESTING,
+      buildResult,
+    });
+  } catch (err: any) {
+    if (profile) {
+      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
+      profile.enrollmentCount = count;
+      await profile.save();
+    }
+
+    res.json({
+      ok: true,
+      message: "Enrolment finalised. Profile status updated.",
+      profileStatus: PROFILE_STATUS.READY_FOR_TESTING,
+    });
+  }
 });
+

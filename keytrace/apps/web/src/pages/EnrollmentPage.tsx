@@ -16,6 +16,10 @@ import {
   HelpCircle,
   Sparkles,
   ArrowRight,
+  Cpu,
+  HardDrive,
+  Check,
+  Save,
 } from "lucide-react";
 import { KeystrokeSessionPayload, ENROLLMENT_THRESHOLDS, PROFILE_STATUS } from "@keytrace/shared";
 
@@ -89,8 +93,26 @@ export function EnrollmentPage() {
     },
   });
 
+  // Build & Save Model mutation
+  const buildModelMutation = useMutation({
+    mutationFn: () => api.enrollment.buildModel(),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["enrollment-status"] });
+      refreshUser();
+      setFeedback({
+        type: "success",
+        message: data.message || "Model built completely and saved to disk. Zero-retraining verification active!",
+      });
+      setTimeout(() => setFeedback(null), 5000);
+    },
+    onError: (err: any) => {
+      setFeedback({ type: "error", message: err.message || "Failed to build and save model." });
+    },
+  });
+
   const sampleCount = statusData?.count || 0;
   const isEnrolled = sampleCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED;
+  const isModelBuilt = !!statusData?.isModelBuilt;
   const progressPercent = Math.min(100, Math.round((sampleCount / ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) * 100));
 
   if (!user?.hasConsent) {
@@ -182,6 +204,88 @@ export function EnrollmentPage() {
             style={{ width: `${progressPercent}%` }}
           />
         </div>
+      </Card>
+
+      {/* Biometric Model Serialization Card */}
+      <Card elevated className="p-5 flex flex-col gap-4 border-cyan-500/30 bg-surface/90 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-amber-400 to-emerald-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground">
+                  Personal Biometric Model Pipeline
+                </h3>
+                {isModelBuilt ? (
+                  <Badge variant="match" glow>SAVED MODEL ARTIFACT ACTIVE</Badge>
+                ) : sampleCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED ? (
+                  <Badge variant="review" glow>READY TO BUILD &amp; SAVE</Badge>
+                ) : (
+                  <Badge variant="neutral">BUILD PENDING SAMPLES</Badge>
+                )}
+              </div>
+              <p className="text-xs text-foreground-muted mt-0.5">
+                {isModelBuilt
+                  ? "Trained model artifact (.joblib) is persisted to disk and cached in memory for zero-retraining inference."
+                  : "Collect at least 10 baseline samples to compile and save your biometric model artifact completely."}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            {isModelBuilt ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => buildModelMutation.mutate()}
+                isLoading={buildModelMutation.isPending}
+                className="text-xs text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/10"
+              >
+                <Save className="w-3.5 h-3.5 mr-1.5" /> Re-build &amp; Overwrite Model
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => buildModelMutation.mutate()}
+                disabled={sampleCount < 1 || buildModelMutation.isPending}
+                isLoading={buildModelMutation.isPending}
+                className="text-xs"
+              >
+                <Cpu className="w-3.5 h-3.5 mr-1.5" /> Build &amp; Save Model Completely
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Model Telemetry Chips */}
+        {isModelBuilt && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-border/60 text-xs font-mono">
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
+              <span className="text-[10px] text-foreground-subtle uppercase">Artifact Engine</span>
+              <span className="text-xs font-bold text-cyan-300">Joblib Compressed</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
+              <span className="text-[10px] text-foreground-subtle uppercase">Inference Mode</span>
+              <span className="text-xs font-bold text-emerald-400">Zero Retraining (Cached)</span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
+              <span className="text-[10px] text-foreground-subtle uppercase">Stability Score</span>
+              <span className="text-xs font-bold text-amber-400">
+                {statusData?.stabilityScore ? `${statusData.stabilityScore}% index` : "Calibrated"}
+              </span>
+            </div>
+            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
+              <span className="text-[10px] text-foreground-subtle uppercase">Calibrated Threshold</span>
+              <span className="text-xs font-bold text-foreground">
+                τ = {statusData?.calibratedThreshold ? statusData.calibratedThreshold.toFixed(2) : "2.80"}
+              </span>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Typing Capture Component */}

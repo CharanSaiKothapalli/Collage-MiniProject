@@ -18,6 +18,8 @@ export interface IVerificationEvent extends Document {
   featureSchemaVersion: string;
   featureDeviations?: Map<string, number>;
   anomalyScore?: number;
+  modelSource?: string;
+  isCached?: boolean;
   timestamp: Date;
   createdAt: Date;
 }
@@ -72,6 +74,14 @@ const VerificationEventSchema = new Schema<IVerificationEvent>(
     },
     anomalyScore: {
       type: Number,
+    },
+    modelSource: {
+      type: String,
+      default: "saved_model",
+    },
+    isCached: {
+      type: Boolean,
+      default: true,
     },
     timestamp: {
       type: Date,

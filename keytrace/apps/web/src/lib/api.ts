@@ -80,17 +80,18 @@ export const api = {
 
   // Enrolment
   enrollment: {
-    recordSample: (payload: KeystrokeSessionPayload) => request<{ ok: boolean; message?: string; count: number; required: number; features: any; profileStatus: string; qualityStatus: string }>("/enrollment/sessions", { method: "POST", body: JSON.stringify(payload) }),
-    getStatus: () => request<{ ok: boolean; status: string; count: number; totalRecorded: number; required: number; isReady: boolean }>("/enrollment/status"),
+    recordSample: (payload: KeystrokeSessionPayload) => request<{ ok: boolean; message?: string; count: number; required: number; features: any; profileStatus: string; qualityStatus: string; isModelBuilt?: boolean; modelTrainedAt?: string }>("/enrollment/sessions", { method: "POST", body: JSON.stringify(payload) }),
+    getStatus: () => request<{ ok: boolean; status: string; count: number; totalRecorded: number; required: number; isReady: boolean; isModelBuilt?: boolean; modelTrainedAt?: string; stabilityScore?: number; calibratedThreshold?: number }>("/enrollment/status"),
     getSamples: () => request<{ ok: boolean; samples: any[] }>("/enrollment/samples"),
-    deleteSample: (sampleId: string) => request<{ ok: boolean; remainingCount: number; profileStatus: string }>(`/enrollment/samples/${sampleId}`, { method: "DELETE" }),
-    finalize: () => request<{ ok: boolean; profileStatus: string }>("/enrollment/finalize", { method: "POST" }),
+    deleteSample: (sampleId: string) => request<{ ok: boolean; remainingCount: number; profileStatus: string; isModelBuilt?: boolean }>(`/enrollment/samples/${sampleId}`, { method: "DELETE" }),
+    finalize: () => request<{ ok: boolean; profileStatus: string; buildResult?: any }>("/enrollment/finalize", { method: "POST" }),
+    buildModel: () => request<{ ok: boolean; message: string; buildResult: any }>("/enrollment/build-model", { method: "POST" }),
   },
 
   // Verification
   verification: {
     startSession: (clientMetadata?: any) => request<{ ok: boolean; sessionId: string; profileStatus: string; enrolledSampleCount: number }>("/verification/sessions", { method: "POST", body: JSON.stringify({ clientMetadata }) }),
-    evaluateWindow: (sessionId: string, payload: KeystrokeSessionPayload) => request<{ ok: boolean; eventId: string; decision: string; score: number | null; threshold: number; modelVersion: string; reasonCodes: string[]; qualityWarnings: string[]; featureDeviations?: Record<string, number>; sessionSummary: any }>(`/verification/sessions/${sessionId}/evaluate`, { method: "POST", body: JSON.stringify({ payload }) }),
+    evaluateWindow: (sessionId: string, payload: KeystrokeSessionPayload) => request<{ ok: boolean; eventId: string; decision: string; score: number | null; threshold: number; modelVersion: string; reasonCodes: string[]; qualityWarnings: string[]; featureDeviations?: Record<string, number>; sessionSummary: any; modelSource?: string; isCached?: boolean }>(`/verification/sessions/${sessionId}/evaluate`, { method: "POST", body: JSON.stringify({ payload }) }),
     getSession: (sessionId: string) => request<{ ok: boolean; session: any; events: any[] }>(`/verification/sessions/${sessionId}`),
     endSession: (sessionId: string) => request<{ ok: boolean; session: any }>(`/verification/sessions/${sessionId}/end`, { method: "POST" }),
   },

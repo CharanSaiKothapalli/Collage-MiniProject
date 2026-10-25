@@ -14,7 +14,7 @@ trap 'echo ""; echo "Shutting down KEYTRACE services..."; kill $(jobs -p) 2>/dev
 # 1. Start Python Machine Learning Microservice (port 8000)
 echo "[1/3] Starting Python ML Microservice on http://localhost:8000..."
 cd "${ROOT_DIR}/ml-service"
-PYTHONPATH=. ./venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --log-level info &
+PYTHONPATH=. ./venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --log-level info &
 ML_PID=$!
 
 # Wait for ML service health check
