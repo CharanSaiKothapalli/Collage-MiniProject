@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+*.pyc
+keystroke_auth.db
+.env

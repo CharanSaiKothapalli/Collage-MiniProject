@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% block title %}Continuous Authentication{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">AI · CYBERSECURITY · BEHAVIOURAL BIOMETRICS</p>
+  <h1>Your typing has<br><em>a signature.</em></h1>
+  <p class="lead">A project prototype that studies keystroke timing to help assess whether a typing pattern matches an enrolled user during an active session.</p>
+  <div class="actions"><a class="button primary" href="/register">Create account ↗</a><a class="button secondary" href="/login">Open workspace</a></div>
+</section>
+<section class="grid three">
+  <article class="panel"><span class="number">01</span><h3>Enroll</h3><p>Record multiple short typing sessions to build a personal timing profile.</p></article>
+  <article class="panel"><span class="number">02</span><h3>Measure</h3><p>Extract key-hold duration, inter-key flight time, pauses and typing rate.</p></article>
+  <article class="panel"><span class="number">03</span><h3>Review</h3><p>Compare a new session with the profile and show a transparent result.</p></article>
+</section>
+<div class="notice"><strong>Prototype notice</strong><p>This is an academic demonstration, not a production security product. Results can be wrong. Do not use it to lock people out of important accounts or collect typing data without consent.</p></div>
+{% endblock %}

@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: keytrace-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - keytrace-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: keytrace-ml-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ML_SERVICE_API_KEY=keytrace-internal-service-secret-token
+      - MODEL_VERSION=v1.2.0-robust-distance
+    networks:
+      - keytrace-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: keytrace-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - MONGODB_URI=mongodb://mongodb:27017/keytrace
+      - CORS_ORIGIN=http://localhost:5173
+      - ML_SERVICE_URL=http://ml-service:8000
+      - ML_SERVICE_API_KEY=keytrace-internal-service-secret-token
+      - JWT_SECRET=production-grade-jwt-secret-replace-with-openssl-rand-64
+      - CSRF_SECRET=production-grade-csrf-secret
+      - COOKIE_SECURE=false
+      - COOKIE_SAME_SITE=lax
+      - ADMIN_BOOTSTRAP_ENABLED=true
+      - ADMIN_BOOTSTRAP_USERNAME=admin
+      - ADMIN_BOOTSTRAP_EMAIL=admin@keytrace.local
+      - ADMIN_BOOTSTRAP_PASSWORD=AdminSecurePass123!
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    networks:
+      - keytrace-net
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: keytrace-web
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - keytrace-net
+
+networks:
+  keytrace-net:
+    driver: bridge
+
+volumes:
+  mongodb_data:

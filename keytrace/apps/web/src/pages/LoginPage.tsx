@@ -1,0 +1,93 @@
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
+import { Card, CardHeader, CardTitle, CardDescription } from "../components/ui/Card.js";
+import { Input } from "../components/ui/Input.js";
+import { Button } from "../components/ui/Button.js";
+import { Shield, ArrowRight, AlertCircle } from "lucide-react";
+
+export function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [emailOrUsername, setEmailOrUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      await login({ emailOrUsername, password });
+      navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials. Please verify and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-[75vh] py-8">
+      <Card elevated accentBar className="w-full max-w-md p-6 sm:p-8 shadow-[0_12px_45px_rgba(0,0,0,0.5)] border-slate-700/80">
+        <CardHeader className="text-center items-center mb-6">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 via-amber-500/10 to-indigo-500/20 border border-cyan-500/50 flex items-center justify-center text-cyan-300 mb-3 shadow-[0_0_20px_rgba(6,182,212,0.35)]">
+            <Shield className="w-7 h-7" />
+          </div>
+          <CardTitle className="text-2xl font-extrabold font-mono text-white">Sign In to KEYTRACE</CardTitle>
+          <CardDescription className="text-slate-300 font-sans mt-1">
+            Enter your credentials to access your behavioural workspace
+          </CardDescription>
+        </CardHeader>
+
+        {error && (
+          <div className="mb-5 p-3.5 rounded-lg bg-rose-950/50 border border-rose-500/50 flex items-start gap-2.5 text-xs text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Input
+            label="Username or Email"
+            name="emailOrUsername"
+            type="text"
+            required
+            placeholder="j_doe or name@domain.com"
+            value={emailOrUsername}
+            onChange={(e) => setEmailOrUsername(e.target.value)}
+          />
+
+          <Input
+            label="Password"
+            name="password"
+            type="password"
+            required
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <Button type="submit" variant="primary" size="lg" isLoading={isLoading} className="mt-3 w-full">
+            Authenticate <ArrowRight className="w-4 h-4 ml-1.5" />
+          </Button>
+        </form>
+
+        <div className="mt-6 pt-5 border-t border-slate-800 text-center text-xs text-slate-400 flex flex-col gap-2">
+          <div>
+            Need an account?{" "}
+            <Link to="/register" className="text-cyan-400 hover:text-cyan-300 hover:underline font-semibold transition-colors">
+              Create an account
+            </Link>
+          </div>
+          <div className="text-[11px] text-slate-500 font-mono">
+            Development note: An administrator account can be bootstrapped from environment settings.
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}

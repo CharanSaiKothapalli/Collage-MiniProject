@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}KeyTrace{% endblock %} · KeyTrace</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="/">KEYTRACE<span> / AUTH</span></a><span class="topnote">BEHAVIOURAL BIOMETRICS LAB</span></header>
+<main class="shell">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<footer>Student project prototype · Keystroke timing data is sensitive behavioural data. Use only with informed consent.</footer>
+</body></html>

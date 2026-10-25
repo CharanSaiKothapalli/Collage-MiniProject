@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% block title %}Workspace{% endblock %}
+{% block content %}
+<section class="workspace-head"><div><p class="eyebrow">LIVE WORKSPACE / USER PROFILE</p><h1>Welcome, {{ user.username }}.</h1><p class="muted">Enrollment sessions saved: <strong id="sample-count">{{ samples }}</strong> · Aim for 5–10 varied sessions.</p></div><a class="button secondary" href="/login">Switch user</a></section>
+<div class="grid two">
+  <section class="panel"><p class="eyebrow">01 / ENROLLMENT</p><h2>Build your profile</h2><p>Type the sample text naturally in the box below. Use a few different sentences across sessions. Avoid copying someone else's typing.</p>
+    <textarea id="enroll-text" placeholder="Type a sentence here. The app records timing intervals only, not the text itself." rows="4"></textarea>
+    <button class="button primary" id="enroll-btn">Save enrollment sample</button><div id="enroll-result" class="result" aria-live="polite"></div>
+  </section>
+  <section class="panel"><p class="eyebrow">02 / VERIFICATION</p><h2>Check a new session</h2><p>Type a fresh sentence. The app compares its timing features with your saved profile.</p>
+    <textarea id="verify-text" placeholder="Type a new sentence to test your profile…" rows="4"></textarea>
+    <button class="button primary" id="verify-btn">Verify typing pattern</button><div id="verify-result" class="result" aria-live="polite"></div>
+  </section>
+</div>
+<section class="panel dashboard"><div class="section-head"><div><p class="eyebrow">SESSION LOG</p><h2>Recent checks</h2></div><button class="button secondary" id="refresh-btn">Refresh</button></div><div id="event-list" class="event-list">Loading recent checks…</div></section>
+<div class="notice"><strong>How to read the result</strong><p><b>Pattern matches</b> means this sample was within the current prototype threshold. <b>Needs review</b> means it differed from the enrolled profile. Neither result proves identity. Test with genuine and other-user samples before reporting model performance.</p></div>
+<script>
+window.KEYTRACE_USER_ID = {{ user.id|tojson }};
+</script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}
