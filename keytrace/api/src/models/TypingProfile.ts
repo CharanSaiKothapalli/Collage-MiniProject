@@ -12,6 +12,11 @@ export interface ITypingProfile extends Document {
   featureSchemaVersion: string;
   enrollmentCount: number;
   modelVersion: string;
+  isModelBuilt: boolean;
+  modelTrainedAt?: Date;
+  modelSampleCount?: number;
+  stabilityScore?: number;
+  calibratedThreshold?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +48,23 @@ const TypingProfileSchema = new Schema<ITypingProfile>(
     modelVersion: {
       type: String,
       default: CURRENT_MODEL_VERSION,
+    },
+    isModelBuilt: {
+      type: Boolean,
+      default: false,
+    },
+    modelTrainedAt: {
+      type: Date,
+    },
+    modelSampleCount: {
+      type: Number,
+      default: 0,
+    },
+    stabilityScore: {
+      type: Number,
+    },
+    calibratedThreshold: {
+      type: Number,
     },
   },
   {
