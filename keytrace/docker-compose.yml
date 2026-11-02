@@ -43,12 +43,12 @@ services:
     container_name: keytrace-api
     restart: unless-stopped
     ports:
-      - "4000:4000"
+      - "5000:5000"
     environment:
       - NODE_ENV=production
-      - PORT=4000
+      - PORT=5000
       - MONGODB_URI=mongodb://mongodb:27017/keytrace
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=http://localhost:5174
       - ML_SERVICE_URL=http://ml-service:8000
       - ML_SERVICE_API_KEY=keytrace-internal-service-secret-token
       - JWT_SECRET=production-grade-jwt-secret-replace-with-openssl-rand-64
@@ -74,7 +74,7 @@ services:
     container_name: keytrace-web
     restart: unless-stopped
     ports:
-      - "5173:80"
+      - "5174:80"
     depends_on:
       - api
     networks:

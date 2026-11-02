@@ -1,0 +1,10 @@
+keytrace/api
+keytrace/api/**
+keytrace/ml-service
+keytrace/ml-service/**
+reference_project
+reference_project/**
+keytrace/scripts
+keytrace/scripts/**
+keytrace/docs
+keytrace/docs/**

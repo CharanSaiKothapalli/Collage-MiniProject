@@ -13,6 +13,9 @@
     "dev:api": "npm run dev -w api",
     "dev:web": "npm run dev -w @keytrace/web",
     "build": "npm run build --workspaces --if-present",
+    "build:shared": "npm run build -w @keytrace/shared",
+    "build:web": "npm run build:shared && npm run build -w @keytrace/web",
+    "build:api": "npm run build:shared && npm run build -w api",
     "test": "npm run test --workspaces --if-present",
     "seed": "tsx scripts/seed-demo.ts",
     "lint": "npm run lint --workspaces --if-present"

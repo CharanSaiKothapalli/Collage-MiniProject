@@ -38,9 +38,28 @@ export function createApp(): Express {
   );
 
   // CORS configuration
+  const allowedOrigins = config.corsOrigin
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   app.use(
     cors({
-      origin: [config.corsOrigin, "http://localhost:5174", "http://127.0.0.1:5174", "http://localhost:5173", "http://127.0.0.1:5173"],
+      origin: (requestOrigin, callback) => {
+        if (!requestOrigin) return callback(null, true);
+        const isStaticAllowed = [
+          ...allowedOrigins,
+          "http://localhost:5174",
+          "http://127.0.0.1:5174",
+          "http://localhost:5173",
+          "http://127.0.0.1:5173",
+        ].includes(requestOrigin);
+
+        if (isStaticAllowed || requestOrigin.endsWith(".vercel.app")) {
+          return callback(null, true);
+        }
+        return callback(new Error(`CORS error: Origin ${requestOrigin} is not permitted.`));
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],

@@ -9,7 +9,7 @@ export const config = {
   env: process.env.NODE_ENV || "development",
   isProduction: process.env.NODE_ENV === "production",
   port: parseInt(process.env.PORT || "5000", 10),
-  host: process.env.HOST || "127.0.0.1",
+  host: process.env.HOST || (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1"),
   apiPrefix: process.env.API_PREFIX || "/api/v1",
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5174",
   
@@ -17,8 +17,8 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || "development-jwt-secret-do-not-use-in-production-replace-with-64-byte-key",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   cookieName: process.env.COOKIE_NAME || "keytrace_session",
-  cookieSecure: process.env.COOKIE_SECURE === "true",
-  cookieSameSite: (process.env.COOKIE_SAME_SITE as "lax" | "strict" | "none") || "lax",
+  cookieSecure: process.env.COOKIE_SECURE !== undefined ? process.env.COOKIE_SECURE === "true" : (process.env.NODE_ENV === "production"),
+  cookieSameSite: (process.env.COOKIE_SAME_SITE as "lax" | "strict" | "none") || (process.env.NODE_ENV === "production" ? "none" : "lax"),
   csrfSecret: process.env.CSRF_SECRET || "development-csrf-secret-replace-in-production",
   
   // Rate limits

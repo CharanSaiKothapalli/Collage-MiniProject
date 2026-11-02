@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { api, setCsrfToken } from "../lib/api.js";
+import { api, setCsrfToken, setAuthToken } from "../lib/api.js";
 import { UserDto } from "@keytrace/shared";
 
 interface AuthContextType {
@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setCsrfToken(null);
+      setAuthToken(null);
     }
   };
 

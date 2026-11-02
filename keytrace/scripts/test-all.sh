@@ -11,7 +11,7 @@ echo "=========================================================="
 echo ""
 echo "[1/4] Running Python ML Microservice Tests..."
 cd "${ROOT_DIR}/ml-service"
-PYTHONPATH=. ./venv/bin/pytest tests/test_ml.py
+./venv/bin/pytest
 
 echo ""
 echo "[2/4] Building Shared TypeScript Definitions..."
@@ -30,7 +30,11 @@ cd "${ROOT_DIR}/apps/web"
 npm run test
 npm run build
 
+# Clean up any transient test models generated during testing
+git status --porcelain "${ROOT_DIR}/ml-service/saved_models/" 2>/dev/null | grep '^\?\?' | awk '{print $2}' | xargs rm -f 2>/dev/null || true
+
 echo ""
 echo "=========================================================="
 echo "SUCCESS: All ML, API Backend, and Frontend suites passed!"
 echo "=========================================================="
+

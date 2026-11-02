@@ -1,0 +1,12 @@
+api
+api/**
+ml-service
+ml-service/**
+reference_project
+reference_project/**
+scripts
+scripts/**
+docs
+docs/**
+.pytest_cache
+*.joblib

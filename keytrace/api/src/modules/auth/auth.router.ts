@@ -103,6 +103,7 @@ authRouter.post(
     res.status(201).json({
       ok: true,
       message: "Registration successful. Please review and accept the behavioural biometric consent terms.",
+      token,
       csrfToken,
       user: {
         id: user._id,
@@ -188,6 +189,7 @@ authRouter.post(
     res.json({
       ok: true,
       message: "Login successful.",
+      token,
       csrfToken,
       user: {
         id: user._id,

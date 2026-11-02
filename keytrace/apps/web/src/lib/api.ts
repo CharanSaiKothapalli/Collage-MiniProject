@@ -6,6 +6,7 @@ import {
 } from "@keytrace/shared";
 
 let inMemoryCsrfToken: string | null = null;
+let inMemoryAuthToken: string | null = null;
 
 export function setCsrfToken(token: string | null) {
   inMemoryCsrfToken = token;
@@ -21,6 +22,7 @@ export function setCsrfToken(token: string | null) {
 }
 
 function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp("(^| )keytrace_csrf=([^;]+)"));
   return match ? decodeURIComponent(match[2]) : null;
 }
@@ -34,6 +36,53 @@ export function getCsrfToken(): string | null {
   } catch {
     return null;
   }
+}
+
+export function setAuthToken(token: string | null) {
+  inMemoryAuthToken = token;
+  if (token) {
+    try {
+      sessionStorage.setItem("keytrace_auth_token", token);
+    } catch {}
+  } else {
+    try {
+      sessionStorage.removeItem("keytrace_auth_token");
+    } catch {}
+  }
+}
+
+export function getAuthToken(): string | null {
+  if (inMemoryAuthToken) return inMemoryAuthToken;
+  try {
+    return sessionStorage.getItem("keytrace_auth_token");
+  } catch {
+    return null;
+  }
+}
+
+const RAW_API_BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+
+export function buildApiUrl(endpoint: string): string {
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    return endpoint;
+  }
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+
+  if (RAW_API_BASE) {
+    if (RAW_API_BASE.endsWith("/api/v1")) {
+      return `${RAW_API_BASE}${cleanEndpoint}`;
+    }
+    if (cleanEndpoint.startsWith("/health")) {
+      return `${RAW_API_BASE}${cleanEndpoint}`;
+    }
+    return `${RAW_API_BASE}/api/v1${cleanEndpoint}`;
+  }
+
+  // Fallback to relative paths so Vite dev server proxy or same-domain proxy handles them
+  if (cleanEndpoint.startsWith("/health")) {
+    return cleanEndpoint;
+  }
+  return `/api/v1${cleanEndpoint}`;
 }
 
 export class ApiError extends Error {
@@ -51,12 +100,18 @@ export class ApiError extends Error {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith("http") ? endpoint : `/api/v1${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const url = buildApiUrl(endpoint);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
+
+  // Attach Authorization Bearer token when present (essential for cross-domain hosting)
+  const token = getAuthToken();
+  if (token && !headers["Authorization"]) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   // Attach CSRF token if present
   const csrf = getCsrfToken();
@@ -79,9 +134,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     data = await response.text();
   }
 
-  // Cache any CSRF token provided in JSON response
-  if (data && typeof data === "object" && data.csrfToken) {
-    setCsrfToken(data.csrfToken);
+  // Cache any CSRF or auth tokens provided in JSON response
+  if (data && typeof data === "object") {
+    if (data.csrfToken) {
+      setCsrfToken(data.csrfToken);
+    }
+    if (data.token) {
+      setAuthToken(data.token);
+    }
   }
 
   if (!response.ok) {
@@ -95,9 +155,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 export const api = {
   // Authentication
   auth: {
-    register: (body: RegisterRequest) => request<{ ok: boolean; user: any; csrfToken: string }>("/auth/register", { method: "POST", body: JSON.stringify(body) }),
-    login: (body: LoginRequest) => request<{ ok: boolean; user: any; csrfToken: string }>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
-    logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+    register: (body: RegisterRequest) => request<{ ok: boolean; user: any; csrfToken: string; token?: string }>("/auth/register", { method: "POST", body: JSON.stringify(body) }),
+    login: (body: LoginRequest) => request<{ ok: boolean; user: any; csrfToken: string; token?: string }>("/auth/login", { method: "POST", body: JSON.stringify(body) }),
+    logout: () => {
+      setAuthToken(null);
+      setCsrfToken(null);
+      return request<{ ok: boolean }>("/auth/logout", { method: "POST" });
+    },
     me: () => request<{ ok: boolean; user: any; csrfToken: string }>("/auth/me"),
     changePassword: (body: ChangePasswordRequest) => request<{ ok: boolean }>("/auth/change-password", { method: "POST", body: JSON.stringify(body) }),
   },
@@ -147,7 +211,11 @@ export const api = {
   // Data & Privacy
   data: {
     exportData: async () => {
-      const res = await fetch("/api/v1/data/export", { credentials: "include" });
+      const url = buildApiUrl("/data/export");
+      const headers: Record<string, string> = {};
+      const token = getAuthToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+      const res = await fetch(url, { credentials: "include", headers });
       if (!res.ok) throw new Error("Failed to export personal data");
       return res.blob();
     },
@@ -166,6 +234,6 @@ export const api = {
 
   // System Health
   health: {
-    getReady: () => fetch("/health/ready").then((r) => r.json()),
+    getReady: () => fetch(buildApiUrl("/health/ready")).then((r) => r.json()),
   },
 };

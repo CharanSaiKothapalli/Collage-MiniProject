@@ -22,7 +22,7 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=5000
 
 COPY package.json ./
 COPY packages/shared/package.json ./packages/shared/
@@ -33,7 +33,7 @@ RUN npm install --workspace=packages/shared --workspace=api --omit=dev
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/api/dist ./api/dist
 
-EXPOSE 4000
+EXPOSE 5000
 
 USER node
 

@@ -1,0 +1,13 @@
+{
+  "name": "keytrace-project-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root configuration for KEYTRACE Monorepo deployment",
+  "scripts": {
+    "build": "cd keytrace && npm run build:web",
+    "build:web": "cd keytrace && npm run build:web",
+    "build:all": "cd keytrace && npm run build",
+    "install:all": "cd keytrace && npm install",
+    "test": "cd keytrace && npm test"
+  }
+}
