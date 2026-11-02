@@ -17,20 +17,20 @@
 ---
 
 ## 📌 Table of Contents
-- [Executive Overview](#-executive-overview)
-- [Key Features & Innovations](#-key-features--innovations)
-- [System Architecture](#-system-architecture)
-- [Repository Structure](#-repository-structure)
-- [Keystroke Dynamics Feature Space (10D)](#-keystroke-dynamics-feature-space-10d)
-- [Quickstart Guide (Local Setup)](#-quickstart-guide-local-setup)
+- [Executive Overview](#executive-overview)
+- [Key Features & Innovations](#key-features--innovations)
+- [System Architecture](#system-architecture)
+- [Repository Structure](#repository-structure)
+- [Keystroke Dynamics Feature Space (10D)](#keystroke-dynamics-feature-space-10d)
+- [Quickstart Guide (Local Setup)](#quickstart-guide-local-setup)
   - [Prerequisites](#prerequisites)
   - [One-Command Quick Launch](#option-a-one-command-launch-recommended)
   - [Step-by-Step Manual Setup](#option-b-step-by-step-manual-setup)
   - [Docker Compose Setup](#option-c-docker-compose-production-emulation)
-- [Pre-Seeded Demo Accounts](#-pre-seeded-demo-accounts)
-- [Automated Testing Suite](#-automated-testing-suite)
-- [Comprehensive Documentation Index](#-comprehensive-documentation-index)
-- [Academic & Ethical Principles](#-academic--ethical-principles)
+- [Pre-Seeded Demo Accounts](#pre-seeded-demo-accounts)
+- [Automated Testing Suite](#automated-testing-suite)
+- [Comprehensive Documentation Index](#comprehensive-documentation-index)
+- [Academic & Ethical Principles](#academic--ethical-principles)
 
 ---
 
