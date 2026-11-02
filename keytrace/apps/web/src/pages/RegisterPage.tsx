@@ -63,13 +63,17 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[75vh] py-8">
-      <Card elevated accentBar className="w-full max-w-md p-6 sm:p-8 shadow-[0_12px_45px_rgba(0,0,0,0.5)] border-slate-700/80">
+    <div className="flex items-center justify-center min-h-[75vh] py-8 relative">
+      {/* Ambient background cyber glow */}
+      <div className="absolute w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none -z-10" />
+
+      <Card elevated accentBar className="w-full max-w-md p-6 sm:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-slate-700/80 cyber-glass">
         <CardHeader className="text-center items-center mb-5">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 via-amber-500/10 to-indigo-500/20 border border-cyan-500/50 flex items-center justify-center text-cyan-300 mb-3 shadow-[0_0_20px_rgba(6,182,212,0.35)]">
-            <Shield className="w-7 h-7" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/25 via-orange-500/15 to-cyan-500/25 border border-amber-500/60 flex items-center justify-center text-amber-300 mb-3 shadow-[0_0_25px_rgba(245,158,11,0.4)] relative">
+            <div className="absolute inset-0 rounded-2xl border border-amber-400/40 animate-ping opacity-25 pointer-events-none" />
+            <Shield className="w-8 h-8 text-amber-300" />
           </div>
-          <CardTitle className="text-2xl font-extrabold font-mono text-white">Create KEYTRACE Account</CardTitle>
+          <CardTitle className="text-2xl font-extrabold font-tech text-white">Create KEYTRACE Account</CardTitle>
           <CardDescription className="text-slate-300 font-sans mt-1 text-xs">
             Begin continuous behavioural keystroke authentication enrolment
           </CardDescription>

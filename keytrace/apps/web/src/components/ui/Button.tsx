@@ -22,17 +22,17 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:via-orange-400 hover:to-amber-500 text-slate-950 font-bold border border-amber-300/50 shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:shadow-[0_0_28px_rgba(245,158,11,0.55)]",
+        "sheen-hover bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:via-orange-400 hover:to-amber-500 text-slate-950 font-bold border border-amber-300/60 shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.65)]",
       secondary:
-        "bg-slate-900/90 hover:bg-slate-800/90 text-slate-100 border border-slate-700/80 hover:border-slate-500 shadow-sm backdrop-blur-md",
+        "bg-slate-900/90 hover:bg-slate-800/95 text-slate-100 border border-slate-700/80 hover:border-cyan-500/50 hover:text-cyan-300 shadow-sm backdrop-blur-md hover:shadow-[0_0_15px_rgba(6,182,212,0.15)]",
       outline:
-        "bg-transparent hover:bg-cyan-950/30 text-slate-200 border border-slate-700/80 hover:border-cyan-500/70 hover:text-cyan-300 transition-colors",
+        "bg-transparent hover:bg-cyan-950/40 text-slate-200 border border-slate-700/80 hover:border-cyan-400 hover:text-cyan-300 shadow-sm hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all",
       danger:
-        "bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/50 hover:border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.25)]",
+        "bg-rose-950/50 hover:bg-rose-900/70 text-rose-300 border border-rose-500/60 hover:border-rose-400 shadow-[0_0_18px_rgba(244,63,94,0.3)] hover:shadow-[0_0_25px_rgba(244,63,94,0.5)]",
       ghost:
-        "bg-transparent hover:bg-slate-800/50 text-slate-400 hover:text-slate-100 border border-transparent",
+        "bg-transparent hover:bg-slate-800/60 text-slate-300 hover:text-white border border-transparent",
       terminal:
-        "bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 font-mono text-xs border border-cyan-500/50 hover:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]",
+        "sheen-hover bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 font-mono text-xs border border-cyan-500/60 hover:border-cyan-400 shadow-[0_0_18px_rgba(6,182,212,0.3)] hover:shadow-[0_0_28px_rgba(6,182,212,0.5)]",
     };
 
     return (

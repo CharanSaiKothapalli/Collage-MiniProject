@@ -15,21 +15,31 @@ import {
   AlertTriangle,
   BookOpen,
   Terminal,
+  Sparkles,
 } from "lucide-react";
+
+import { LiveKeystrokePlayground } from "../components/keystroke/LiveKeystrokePlayground.js";
 
 export function LandingPage() {
   return (
     <div className="flex flex-col gap-24 py-8">
       {/* Hero Section */}
-      <section className="flex flex-col items-center text-center max-w-4xl mx-auto gap-6 pt-6 relative">
+      <section className="flex flex-col items-center text-center max-w-5xl mx-auto gap-6 pt-6 relative">
+        {/* Ambient Radar Orbit Effect */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-cyan-500/10 via-amber-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
+
         <div className="flex items-center gap-2.5">
-          <Badge variant="cyan" className="shadow-[0_0_15px_rgba(6,182,212,0.3)]">[ BIOMETRIC RESEARCH PLATFORM ]</Badge>
-          <Badge variant="accent">v1.2.0-STABLE</Badge>
+          <Badge variant="cyan" glow className="font-tech text-xs tracking-wider">
+            [ CONTINUOUS BIOMETRIC DEFENSE ]
+          </Badge>
+          <Badge variant="accent" className="font-mono">
+            v1.2.0-STABLE
+          </Badge>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white font-mono leading-[1.15]">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white font-tech leading-[1.12]">
           Continuous Authentication via{" "}
-          <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(245,158,11,0.35)]">
+          <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(245,158,11,0.45)]">
             Keystroke Dynamics
           </span>
         </h1>
@@ -39,7 +49,7 @@ export function LandingPage() {
           in real time. Robust timing statistics and machine-learning models provide continuous behavioural assurance without logging or transmitting typed characters.
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-3.5 pt-3">
+        <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
           <Link to="/register">
             <Button size="lg" variant="primary">
               Begin Enrolment <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -57,24 +67,43 @@ export function LandingPage() {
           </Link>
         </div>
 
+        {/* Quick Testing Callout */}
+        <div className="p-3 px-4 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs font-mono text-slate-300 flex flex-wrap items-center justify-center gap-3 shadow-lg backdrop-blur-md">
+          <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> INSTANT EVALUATION DEMO:
+          </span>
+          <span>Pre-seeded with profiles:</span>
+          <span className="px-2 py-0.5 rounded bg-amber-950/70 border border-amber-500/40 text-amber-300 font-bold">admin</span>
+          <span className="px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-bold">alice_genuine</span>
+          <span className="px-2 py-0.5 rounded bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 font-bold">bob_impostor</span>
+          <Link to="/login" className="text-cyan-400 hover:text-cyan-300 underline font-semibold flex items-center gap-0.5 ml-1">
+            Sign In with 1-Click <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
         {/* Live metric preview highlights */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full max-w-3xl pt-8 border-t border-slate-800/80 mt-2">
-          <div className="flex flex-col items-center p-3.5 rounded-lg bg-slate-900/75 border border-slate-700/70 hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all backdrop-blur-md">
-            <span className="text-2xl font-mono font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">0%</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full max-w-3xl pt-6 border-t border-slate-800/80 mt-2">
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/70 hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all backdrop-blur-md">
+            <span className="text-2xl font-tech font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">0%</span>
             <span className="text-[11px] font-mono uppercase text-slate-400 mt-1 font-semibold">Text Stored/Sent</span>
           </div>
-          <div className="flex flex-col items-center p-3.5 rounded-lg bg-slate-900/75 border border-slate-700/70 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-all backdrop-blur-md">
-            <span className="text-2xl font-mono font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">10-Dim</span>
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/70 hover:border-emerald-500/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all backdrop-blur-md">
+            <span className="text-2xl font-tech font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">10-Dim</span>
             <span className="text-[11px] font-mono uppercase text-slate-400 mt-1 font-semibold">Feature Space</span>
           </div>
-          <div className="flex flex-col items-center p-3.5 rounded-lg bg-slate-900/75 border border-slate-700/70 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all backdrop-blur-md">
-            <span className="text-2xl font-mono font-bold bg-gradient-to-r from-cyan-400 to-sky-300 bg-clip-text text-transparent">&lt; 18ms</span>
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/70 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all backdrop-blur-md">
+            <span className="text-2xl font-tech font-bold bg-gradient-to-r from-cyan-400 to-sky-300 bg-clip-text text-transparent">&lt; 18ms</span>
             <span className="text-[11px] font-mono uppercase text-slate-400 mt-1 font-semibold">ML Inference</span>
           </div>
-          <div className="flex flex-col items-center p-3.5 rounded-lg bg-slate-900/75 border border-slate-700/70 hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)] transition-all backdrop-blur-md">
-            <span className="text-2xl font-mono font-bold bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">τ = 2.80</span>
+          <div className="flex flex-col items-center p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/70 hover:border-amber-500/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)] transition-all backdrop-blur-md">
+            <span className="text-2xl font-tech font-bold bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">τ = 2.80</span>
             <span className="text-[11px] font-mono uppercase text-slate-400 mt-1 font-semibold">Decision Cutoff</span>
           </div>
+        </div>
+
+        {/* Embedded Interactive Live Keystroke Biometric Sandbox */}
+        <div className="w-full pt-8">
+          <LiveKeystrokePlayground />
         </div>
       </section>
 

@@ -55,8 +55,24 @@ export function DecisionBadge({ decision }: { decision: VerificationDecisionType
   if (decision === VERIFICATION_DECISION.REVIEW) {
     return (
       <Badge variant="review" className="glow-review font-bold">
-        <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
+        <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24] animate-pulse" />
         NEEDS REVIEW
+      </Badge>
+    );
+  }
+  if (decision === "ALERT" || decision === "IMPOSTOR") {
+    return (
+      <Badge variant="alert" className="glow-alert font-bold">
+        <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_#fb7185] animate-ping" />
+        RISK ALERT
+      </Badge>
+    );
+  }
+  if (decision === VERIFICATION_DECISION.PROFILE_NOT_READY) {
+    return (
+      <Badge variant="accent">
+        <span className="w-2 h-2 rounded-full bg-amber-400" />
+        PROFILE NOT READY
       </Badge>
     );
   }

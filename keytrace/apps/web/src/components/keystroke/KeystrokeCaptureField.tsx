@@ -176,8 +176,32 @@ export function KeystrokeCaptureField({
           className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/25 rounded-lg p-4 text-sm font-mono text-slate-100 placeholder:text-slate-500 outline-none transition-all resize-none shadow-inner"
         />
 
-        {/* Live Keystroke Telemetry HUD Bar */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-slate-900/95 px-3 py-1.5 rounded-md border border-cyan-500/40 text-xs font-mono text-slate-200 backdrop-blur-md shadow-[0_0_15px_rgba(6,182,212,0.25)] pointer-events-none select-none">
+        {/* Live Keystroke Telemetry HUD & Spectrum */}
+        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-slate-900/95 px-3 py-1.5 rounded-lg border border-cyan-500/50 text-xs font-mono text-slate-200 backdrop-blur-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] pointer-events-none select-none">
+          {/* Animated Cadence Waveform */}
+          <div className="hidden sm:flex items-end gap-1 h-5 px-1 border-r border-slate-700/80 pr-2.5">
+            {(observations.length > 0 ? observations.slice(-10) : [1, 2, 3, 4, 5, 6, 7, 8]).map((item, idx) => {
+              const heightPercent =
+                typeof item === "number"
+                  ? 25 + (idx % 3) * 15
+                  : Math.min(100, Math.max(20, Math.round((item.holdMs / 180) * 100)));
+              return (
+                <div
+                  key={idx}
+                  className={cn(
+                    "w-1 rounded-full transition-all duration-150",
+                    observations.length > 0
+                      ? idx % 2 === 0
+                        ? "bg-cyan-400 shadow-[0_0_6px_#22d3ee]"
+                        : "bg-amber-400 shadow-[0_0_6px_#fbbf24]"
+                      : "bg-slate-700 opacity-40"
+                  )}
+                  style={{ height: `${heightPercent}%` }}
+                />
+              );
+            })}
+          </div>
+
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-slate-400 font-semibold">HOLD:</span>

@@ -33,28 +33,30 @@ export function Navbar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-cyan-500/20 bg-[#07090e]/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)] select-none">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-15 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-cyan-500/25 bg-[#050811]/90 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.6)] select-none">
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <Link
           to={user ? "/dashboard" : "/"}
           onClick={() => setMobileMenuOpen(false)}
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3.5 group"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 via-amber-500/10 to-indigo-500/20 border border-cyan-500/50 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.3)] group-hover:shadow-[0_0_22px_rgba(6,182,212,0.55)] group-hover:border-cyan-400 transition-all">
-            <Shield className="w-4 h-4 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/25 via-amber-500/15 to-indigo-500/25 border border-cyan-500/60 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)] group-hover:shadow-[0_0_26px_rgba(6,182,212,0.7)] group-hover:border-cyan-300 transition-all">
+            <Shield className="w-4.5 h-4.5 text-cyan-400 group-hover:text-cyan-200 transition-colors" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold tracking-tight font-mono text-base leading-none flex items-center gap-2">
-              <span className="bg-gradient-to-r from-amber-400 via-orange-300 to-cyan-400 bg-clip-text text-transparent font-extrabold">
+            <span className="font-bold tracking-tight font-tech text-base leading-none flex items-center gap-2">
+              <span className="bg-gradient-to-r from-amber-400 via-orange-300 to-cyan-400 bg-clip-text text-transparent font-extrabold text-lg">
                 KEYTRACE
               </span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 shadow-[0_0_8px_rgba(6,182,212,0.3)] font-semibold">
-                v1.2
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.35)] font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                ONLINE
               </span>
             </span>
-            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest hidden sm:inline mt-0.5">
-              Biometric Dynamics
+            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest hidden sm:inline mt-0.5 font-semibold">
+              Behavioural Biometrics
             </span>
           </div>
         </Link>

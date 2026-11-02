@@ -49,6 +49,8 @@ export default {
       fontFamily: {
         sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
         mono: ["JetBrains Mono", "Fira Code", "Courier New", "monospace"],
+        display: ["Outfit", "Inter", "sans-serif"],
+        tech: ["Space Grotesk", "JetBrains Mono", "sans-serif"],
       },
       boxShadow: {
         "glow-accent": "0 0 25px -4px rgba(245, 158, 11, 0.4)",
@@ -57,6 +59,9 @@ export default {
         "glow-review": "0 0 25px -4px rgba(245, 158, 11, 0.4)",
         "glow-alert": "0 0 25px -4px rgba(244, 63, 94, 0.4)",
         "glass": "0 8px 32px 0 rgba(0, 0, 0, 0.37)",
+        "glass-elevated": "0 16px 48px 0 rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)",
+        "neon-cyan": "0 0 15px rgba(6, 182, 212, 0.5), inset 0 0 15px rgba(6, 182, 212, 0.2)",
+        "neon-amber": "0 0 15px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(245, 158, 11, 0.2)",
       },
       keyframes: {
         pulseGlow: {
@@ -70,11 +75,26 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        radarSweep: {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        equalizer: {
+          "0%, 100%": { height: "20%" },
+          "50%": { height: "100%" },
+        },
       },
       animation: {
         "pulse-slow": "pulseGlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "scanline": "scanline 8s linear infinite",
         "shimmer": "shimmer 2s infinite",
+        "radar": "radarSweep 6s linear infinite",
+        "float": "float 5s ease-in-out infinite",
+        "equalizer": "equalizer 1.2s ease-in-out infinite",
       },
     },
   },
