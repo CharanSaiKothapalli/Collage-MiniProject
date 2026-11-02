@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import { spawn, ChildProcess } from "child_process";
+import path from "path";
+import fs from "fs";
 import { createApp } from "./app.js";
 import { config } from "./config/index.js";
 import { logger } from "./utils/logger.js";
@@ -15,6 +18,113 @@ import { logAuditEvent } from "./services/auditService.js";
 import { USER_ROLE, PROFILE_STATUS, CONSENT_STATUS, VERIFICATION_DECISION } from "@keytrace/shared";
 
 let memoryServer: MongoMemoryServer | null = null;
+let mlChildProcess: ChildProcess | null = null;
+
+async function ensureMLServiceRunning(): Promise<void> {
+  const isLocalML =
+    config.mlServiceUrl.includes("127.0.0.1") ||
+    config.mlServiceUrl.includes("localhost");
+
+  if (!isLocalML) {
+    return;
+  }
+
+  // 1. Check if ML service is already responding
+  try {
+    const res = await fetch(`${config.mlServiceUrl.replace(/\/$/, "")}/health/live`, {
+      signal: AbortSignal.timeout(1000),
+    });
+    if (res.ok) {
+      logger.info("ML microservice is already running and healthy.");
+      return;
+    }
+  } catch {
+    // Service not running yet, proceed with spawn
+  }
+
+  // 2. Locate ml-service directory
+  const candidateMlDirs = [
+    path.resolve(process.cwd(), "ml-service"),
+    path.resolve(process.cwd(), "../ml-service"),
+    path.resolve(process.cwd(), "../../ml-service"),
+  ];
+
+  let mlDir: string | null = null;
+  for (const dir of candidateMlDirs) {
+    if (fs.existsSync(dir) && fs.existsSync(path.join(dir, "app/main.py"))) {
+      mlDir = dir;
+      break;
+    }
+  }
+
+  if (!mlDir) {
+    logger.warn("ML microservice directory not found; skipping automatic spawn.");
+    return;
+  }
+
+  // 3. Find uvicorn executable
+  const candidateUvicorns = [
+    path.join(mlDir, "venv/bin/uvicorn"),
+    path.join(mlDir, ".venv/bin/uvicorn"),
+    "uvicorn",
+  ];
+
+  let uvicornCmd: string | null = null;
+  for (const cmd of candidateUvicorns) {
+    if (cmd.startsWith("/") || cmd.startsWith(".")) {
+      if (fs.existsSync(cmd)) {
+        uvicornCmd = cmd;
+        break;
+      }
+    }
+  }
+
+  const cmd = uvicornCmd || "python3";
+  const args = uvicornCmd
+    ? ["app.main:app", "--host", "127.0.0.1", "--port", "8000", "--log-level", "info"]
+    : ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--log-level", "info"];
+
+  logger.info({ cmd, mlDir }, "Spawning embedded ML microservice on 127.0.0.1:8000 for single-instance deployment...");
+
+  try {
+    mlChildProcess = spawn(cmd, args, {
+      cwd: mlDir,
+      env: { ...process.env, PYTHONPATH: "." },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    mlChildProcess.stdout?.on("data", (data) => {
+      logger.debug(`[ML-Service] ${data.toString().trim()}`);
+    });
+
+    mlChildProcess.stderr?.on("data", (data) => {
+      logger.debug(`[ML-Service] ${data.toString().trim()}`);
+    });
+
+    mlChildProcess.on("exit", (code, signal) => {
+      if (code !== 0 && code !== null) {
+        logger.warn({ code, signal }, "Embedded ML microservice child process exited.");
+      }
+    });
+
+    // Wait up to 10 seconds for service readiness
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      try {
+        const check = await fetch("http://127.0.0.1:8000/health/live", {
+          signal: AbortSignal.timeout(1000),
+        });
+        if (check.ok) {
+          logger.info("Embedded ML microservice successfully initialized and ready on http://127.0.0.1:8000");
+          return;
+        }
+      } catch {}
+    }
+    logger.warn("Spawned ML service did not become healthy within 10s; continuing server startup.");
+  } catch (err: any) {
+    logger.warn({ err: err.message }, "Could not spawn ML microservice child process; continuing in standalone mode.");
+  }
+}
 
 async function connectDatabase(): Promise<string> {
   // First attempt connection to configured MongoDB URI (e.g. Atlas or local daemon)
@@ -27,13 +137,13 @@ async function connectDatabase(): Promise<string> {
     logger.info("Successfully connected to primary MongoDB database.");
     return config.mongoUri;
   } catch (err: any) {
-    if (config.isProduction) {
+    if (config.isProduction && process.env.ALLOW_IN_MEMORY_DB !== "true") {
       logger.error({ err: err.message }, "MongoDB connection failed in production. Refusing fallback.");
       throw err;
     }
 
-    // In development/test mode, seamlessly start an in-memory MongoDB instance
-    logger.warn({ err: err.message }, "Primary MongoDB not reachable. Initializing embedded MongoMemoryServer for development...");
+    // In development/test mode or if ALLOW_IN_MEMORY_DB is set, start an in-memory MongoDB instance
+    logger.warn({ err: err.message }, "Primary MongoDB not reachable. Initializing embedded MongoMemoryServer...");
     try {
       memoryServer = await MongoMemoryServer.create({
         instance: { dbName: "keytrace", ip: "127.0.0.1" },
@@ -242,6 +352,7 @@ async function initializeModelRegistry(): Promise<void> {
 async function startServer(): Promise<void> {
   try {
     await connectDatabase();
+    await ensureMLServiceRunning();
     await bootstrapInitialAdmin();
     await bootstrapDemoAccounts();
     await initializeModelRegistry();
@@ -250,14 +361,21 @@ async function startServer(): Promise<void> {
 
     const server = app.listen(config.port, config.host, () => {
       logger.info(
-        `KEYTRACE Backend API running at http://localhost:${config.port}${config.apiPrefix}`
+        `KEYTRACE running in unified single-instance mode at http://${config.host}:${config.port}`
       );
-      logger.info(`Swagger API documentation available at http://localhost:${config.port}/api/docs`);
+      logger.info(`Swagger API documentation available at http://${config.host}:${config.port}/api/docs`);
+      logger.info(`React web frontend served dynamically at http://${config.host}:${config.port}/`);
     });
 
     // Graceful shutdown handlers
     const shutdown = async (signal: string) => {
       logger.info({ signal }, "Received termination signal. Commencing graceful shutdown...");
+      if (mlChildProcess) {
+        logger.info("Terminating spawned ML microservice child process...");
+        try {
+          mlChildProcess.kill("SIGTERM");
+        } catch {}
+      }
       server.close(async () => {
         logger.info("HTTP server closed.");
         await mongoose.disconnect();
@@ -274,6 +392,11 @@ async function startServer(): Promise<void> {
     process.on("SIGINT", () => shutdown("SIGINT"));
   } catch (error: any) {
     logger.fatal({ err: error.message }, "Server fatal initialization failure");
+    if (mlChildProcess) {
+      try {
+        mlChildProcess.kill("SIGKILL");
+      } catch {}
+    }
     process.exit(1);
   }
 }

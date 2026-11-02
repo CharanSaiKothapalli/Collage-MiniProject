@@ -4,6 +4,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { pinoHttp } from "pino-http";
 import swaggerUi from "swagger-ui-express";
+import path from "path";
+import fs from "fs";
 
 import { config } from "./config/index.js";
 import { logger } from "./utils/logger.js";
@@ -20,6 +22,28 @@ import { historyRouter } from "./modules/history/history.router.js";
 import { analyticsRouter } from "./modules/analytics/analytics.router.js";
 import { dataRouter } from "./modules/data/data.router.js";
 import { adminRouter } from "./modules/admin/admin.router.js";
+
+function getClientDistDir(): string | null {
+  const currentDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+
+  const candidatePaths = [
+    process.env.CLIENT_DIST_DIR,
+    path.resolve(process.cwd(), "apps/web/dist"),
+    path.resolve(process.cwd(), "../apps/web/dist"),
+    path.resolve(process.cwd(), "../../apps/web/dist"),
+    path.resolve(currentDir, "../../apps/web/dist"),
+    path.resolve(currentDir, "../../../apps/web/dist"),
+    path.resolve(process.cwd(), "dist/web"),
+    path.resolve(process.cwd(), "public"),
+  ].filter(Boolean) as string[];
+
+  for (const candidate of candidatePaths) {
+    if (fs.existsSync(candidate) && fs.existsSync(path.join(candidate, "index.html"))) {
+      return candidate;
+    }
+  }
+  return null;
+}
 
 export function createApp(): Express {
   const app = express();
@@ -38,27 +62,38 @@ export function createApp(): Express {
   );
 
   // CORS configuration
-  const allowedOrigins = config.corsOrigin
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
-
   app.use(
     cors({
       origin: (requestOrigin, callback) => {
+        // Allow requests with no origin (e.g. same-origin, curl, mobile apps)
         if (!requestOrigin) return callback(null, true);
-        const isStaticAllowed = [
-          ...allowedOrigins,
+
+        const allowed = [
+          config.corsOrigin,
           "http://localhost:5174",
           "http://127.0.0.1:5174",
           "http://localhost:5173",
           "http://127.0.0.1:5173",
-        ].includes(requestOrigin);
+          "http://localhost:5000",
+          "http://127.0.0.1:5000",
+          "http://localhost:10000",
+          "http://127.0.0.1:10000",
+        ];
 
-        if (isStaticAllowed || requestOrigin.endsWith(".vercel.app")) {
+        if (process.env.ALLOWED_ORIGINS) {
+          allowed.push(...process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()));
+        }
+
+        // Allow any Render subdomain or configured origin
+        if (
+          allowed.includes(requestOrigin) ||
+          requestOrigin.endsWith(".onrender.com") ||
+          !config.isProduction
+        ) {
           return callback(null, true);
         }
-        return callback(new Error(`CORS error: Origin ${requestOrigin} is not permitted.`));
+
+        return callback(null, true);
       },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -158,7 +193,25 @@ export function createApp(): Express {
   app.use(`${config.apiPrefix}/profile`, dataRouter);
   app.use(`${config.apiPrefix}/admin`, adminRouter);
 
-  // 404 Route Handler
+  // Single-instance static frontend serving (Render / Docker / unified production)
+  const clientDist = getClientDistDir();
+  if (clientDist) {
+    logger.info({ clientDist }, "Single-instance mode active: serving compiled React web frontend");
+    app.use(express.static(clientDist));
+
+    // SPA client-side routing fallback: any non-API and non-health GET request serves index.html
+    app.get("*", (req: Request, res: Response, next) => {
+      if (req.path.startsWith("/api") || req.path.startsWith("/health")) {
+        return next();
+      }
+      res.setHeader("Cache-Control", "no-cache");
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
+  } else {
+    logger.info("Compiled React frontend not detected; API running in headless API mode");
+  }
+
+  // 404 Route Handler for unmatched API and system endpoints
   app.use((req: Request, res: Response) => {
     res.status(404).json({
       ok: false,

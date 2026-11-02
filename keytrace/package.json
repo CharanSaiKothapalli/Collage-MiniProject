@@ -13,9 +13,9 @@
     "dev:api": "npm run dev -w api",
     "dev:web": "npm run dev -w @keytrace/web",
     "build": "npm run build --workspaces --if-present",
-    "build:shared": "npm run build -w @keytrace/shared",
-    "build:web": "npm run build:shared && npm run build -w @keytrace/web",
-    "build:api": "npm run build:shared && npm run build -w api",
+    "build:render": "npm run build --workspaces --if-present && (cd ml-service && (test -d venv || python3 -m venv venv) && (./venv/bin/pip install -r requirements.txt || pip3 install -r requirements.txt) || true)",
+    "start": "bash ./scripts/start-production.sh",
+    "start:production": "bash ./scripts/start-production.sh",
     "test": "npm run test --workspaces --if-present",
     "seed": "tsx scripts/seed-demo.ts",
     "lint": "npm run lint --workspaces --if-present"

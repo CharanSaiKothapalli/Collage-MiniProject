@@ -17,8 +17,8 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || "development-jwt-secret-do-not-use-in-production-replace-with-64-byte-key",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
   cookieName: process.env.COOKIE_NAME || "keytrace_session",
-  cookieSecure: process.env.COOKIE_SECURE !== undefined ? process.env.COOKIE_SECURE === "true" : (process.env.NODE_ENV === "production"),
-  cookieSameSite: (process.env.COOKIE_SAME_SITE as "lax" | "strict" | "none") || (process.env.NODE_ENV === "production" ? "none" : "lax"),
+  cookieSecure: process.env.COOKIE_SECURE !== undefined ? process.env.COOKIE_SECURE === "true" : process.env.NODE_ENV === "production",
+  cookieSameSite: (process.env.COOKIE_SAME_SITE as "lax" | "strict" | "none") || "lax",
   csrfSecret: process.env.CSRF_SECRET || "development-csrf-secret-replace-in-production",
   
   // Rate limits
@@ -31,7 +31,7 @@ export const config = {
   mongoDbName: process.env.MONGODB_DB_NAME || "keytrace",
   
   // ML Service
-  mlServiceUrl: process.env.ML_SERVICE_URL || "http://localhost:8000",
+  mlServiceUrl: process.env.ML_SERVICE_URL || "http://127.0.0.1:8000",
   mlServiceApiKey: process.env.ML_SERVICE_API_KEY || "keytrace-internal-service-secret-token",
   mlServiceTimeoutMs: parseInt(process.env.ML_SERVICE_TIMEOUT_MS || "5000", 10),
   

@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: keytrace
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: MONGODB_URI
+        sync: false
+      - key: ALLOW_IN_MEMORY_DB
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CSRF_SECRET
+        generateValue: true
+      - key: ML_SERVICE_API_KEY
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: "lax"
+      - key: ADMIN_BOOTSTRAP_ENABLED
+        value: "true"
+      - key: ADMIN_BOOTSTRAP_USERNAME
+        value: "admin"
+      - key: ADMIN_BOOTSTRAP_EMAIL
+        value: "admin@keytrace.local"
+      - key: ADMIN_BOOTSTRAP_PASSWORD
+        value: "Admin1234!"

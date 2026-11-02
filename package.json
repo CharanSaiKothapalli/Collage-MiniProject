@@ -1,13 +1,12 @@
 {
-  "name": "keytrace-project-root",
+  "name": "collage-miniproject-root",
   "version": "1.0.0",
   "private": true,
-  "description": "Root configuration for KEYTRACE Monorepo deployment",
+  "description": "Root runner for KEYTRACE Keystroke Dynamics Continuous Behavioural Authentication Platform",
   "scripts": {
-    "build": "cd keytrace && npm run build:web",
-    "build:web": "cd keytrace && npm run build:web",
-    "build:all": "cd keytrace && npm run build",
-    "install:all": "cd keytrace && npm install",
-    "test": "cd keytrace && npm test"
+    "build": "npm --prefix keytrace run build:render",
+    "start": "npm --prefix keytrace run start",
+    "test": "npm --prefix keytrace test",
+    "seed": "npm --prefix keytrace run seed"
   }
 }

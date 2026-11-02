@@ -22,11 +22,12 @@
 - [System Architecture](#system-architecture)
 - [Repository Structure](#repository-structure)
 - [Keystroke Dynamics Feature Space (10D)](#keystroke-dynamics-feature-space-10d)
-- [Quickstart Guide (Local Setup)](#quickstart-guide-local-setup)
+- [Quickstart Guide & Deployment](#quickstart-guide--deployment)
   - [Prerequisites](#prerequisites)
-  - [One-Command Quick Launch](#option-a-one-command-launch-recommended)
+  - [One-Command Quick Launch (Local)](#option-a-one-command-launch-recommended)
   - [Step-by-Step Manual Setup](#option-b-step-by-step-manual-setup)
   - [Docker Compose Setup](#option-c-docker-compose-production-emulation)
+  - [Render Cloud Deployment (Single-Instance)](#option-d-render-cloud-deployment-single-instance)
 - [Pre-Seeded Demo Accounts](#pre-seeded-demo-accounts)
 - [Automated Testing Suite](#automated-testing-suite)
 - [Comprehensive Documentation Index](#comprehensive-documentation-index)
@@ -145,7 +146,7 @@ KEYTRACE measures typing cadence through a deterministic 10-dimensional feature 
 
 ---
 
-## 🚀 Quickstart Guide (Local Setup)
+## 🚀 Quickstart Guide & Deployment
 
 ### Prerequisites
 - **Node.js**: v18.0.0+ (v20+ LTS recommended)
@@ -227,6 +228,29 @@ Run all microservices in isolated production-grade containers:
 cd keytrace
 docker compose up --build
 ```
+
+---
+
+### Option D: Render Cloud Deployment (Single-Instance)
+
+Deploy the entire platform (Frontend, Backend API, and ML Microservice) together on a **single Render free-tier instance**:
+
+1. **Deploy with Render Blueprint (1-Click)**:
+   - Push this repo to your GitHub: `https://github.com/CharanSaiKothapalli/Collage-MiniProject`.
+   - In [Render Dashboard](https://dashboard.render.com/), click **New +** > **Blueprint**.
+   - Select your repository. Render automatically reads [`render.yaml`](render.yaml) and configures the single-instance Docker service!
+
+2. **Manual Web Service on Render**:
+   - In Render, click **New +** > **Web Service**.
+   - Select `Docker` runtime and specify `./Dockerfile`.
+   - Set Environment Variables:
+     - `NODE_ENV=production`
+     - `PORT=10000`
+     - `HOST=0.0.0.0`
+     - `ALLOW_IN_MEMORY_DB=true` *(or provide your `MONGODB_URI` from MongoDB Atlas)*
+   - Health check path: `/health/live`.
+
+Both frontend and backend will be live on your Render URL: `https://<your-app>.onrender.com`. Consult [docs/deployment.md](keytrace/docs/deployment.md) for full details.
 
 ---
 

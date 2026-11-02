@@ -58,6 +58,15 @@ wheels/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# ML Models
+*.joblib
+*.pkl
+!keytrace/ml-service/saved_models/6adef769c47f13e4a6fd2efb.joblib
+!keytrace/ml-service/saved_models/6ae02f45a00e55a5d6f421e8.joblib
+!keytrace/ml-service/saved_models/6ae03485ee62e11275b0f4a7.joblib
+!keytrace/ml-service/saved_models/6ae6294edff0450abb8f3a18.joblib
+!keytrace/ml-service/saved_models/6ae62a739440543a47d5e3e6.joblib
 coverage/
 *.lcov
 
