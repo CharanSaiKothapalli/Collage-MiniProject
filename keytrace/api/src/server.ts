@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -17,7 +16,7 @@ import { hashPassword } from "./utils/security.js";
 import { logAuditEvent } from "./services/auditService.js";
 import { USER_ROLE, PROFILE_STATUS, CONSENT_STATUS, VERIFICATION_DECISION } from "@keytrace/shared";
 
-let memoryServer: MongoMemoryServer | null = null;
+let memoryServer: any = null;
 let mlChildProcess: ChildProcess | null = null;
 
 async function ensureMLServiceRunning(): Promise<void> {
@@ -145,6 +144,7 @@ async function connectDatabase(): Promise<string> {
     // In development/test mode or if ALLOW_IN_MEMORY_DB is set, start an in-memory MongoDB instance
     logger.warn({ err: err.message }, "Primary MongoDB not reachable. Initializing embedded MongoMemoryServer...");
     try {
+      const { MongoMemoryServer } = await import("mongodb-memory-server");
       memoryServer = await MongoMemoryServer.create({
         instance: { dbName: "keytrace", ip: "127.0.0.1" },
       });

@@ -60,12 +60,13 @@ RUN pip install --no-cache-dir -r ./ml-service/requirements.txt
 # Copy ML service application code and models
 COPY ml-service ./ml-service
 
-# Setup Node.js production runtime dependencies
+# Setup Node.js production runtime
 COPY package*.json ./
 COPY packages/shared/package*.json ./packages/shared/
 COPY api/package*.json ./api/
 
-RUN npm install --omit=dev --workspace=@keytrace/shared --workspace=api
+# Copy installed node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy compiled outputs from builder
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
