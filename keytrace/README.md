@@ -43,8 +43,8 @@
 
 ```mermaid
 graph TD
-    User([Consenting User]) <-->|Physical Keystrokes| WebApp["React Frontend (apps/web)<br/>Vite / Tailwind / Port 5173"]
-    WebApp -->|Timing Payloads Only<br/>Hold & Flight ms| API["Node.js Express API (api)<br/>TypeScript / Port 4000"]
+    User([Consenting User]) <-->|Physical Keystrokes| WebApp["React Frontend (apps/web)<br/>Vite / Tailwind / Port 5174"]
+    WebApp -->|Timing Payloads Only<br/>Hold & Flight ms| API["Node.js Express API (api)<br/>TypeScript / Port 5000"]
     API -->|Mongoose ODM| DB[(MongoDB Atlas / In-Memory)]
     API -->|Internal REST Call<br/>X-Internal-ML-Key| ML["Python ML Microservice (ml-service)<br/>FastAPI / Port 8000"]
     ML -->|Robust Distance & Anomaly Score| API
@@ -67,8 +67,8 @@ For complete architectural details, consult [docs/architecture.md](docs/architec
 
 ### Step 1: Clone and Install Dependencies
 ```bash
-# Navigate to the project root
-cd /Users/charan/miniproject/keytrace
+# Navigate to keytrace directory
+cd keytrace
 
 # Install root, API, and Web dependencies
 npm install
@@ -113,8 +113,8 @@ This script validates:
 ```
 This automatically launches:
 1. **Python ML Microservice**: `http://localhost:8000`
-2. **Node.js Backend API**: `http://localhost:4000` *(uses embedded in-memory MongoDB automatically if no Atlas URI is provided)*
-3. **React Web Application**: `http://localhost:5173`
+2. **Node.js Backend API**: `http://localhost:5000` *(uses embedded in-memory MongoDB automatically if no Atlas URI is provided)*
+3. **React Web Application**: `http://localhost:5174`
 
 Press `Ctrl+C` to gracefully terminate all services simultaneously.
 
@@ -144,14 +144,14 @@ This creates the following verified accounts:
 
 ## 6. End-to-End User Journey
 
-1. **Visit Landing Page** (`http://localhost:5173`): Review the academic motivation, privacy guarantees, and system architecture.
+1. **Visit Landing Page** (`http://localhost:5174`): Review the academic motivation, privacy guarantees, and system architecture.
 2. **Log In**: Authenticate using `alice_genuine` (or register a fresh account).
 3. **Informed Consent**: Review the disclosure on what data is captured. Consent must be affirmatively granted.
 4. **Enrolment Workspace**: Type natural prompt passages into the `KeystrokeCaptureField`. Watch real-time cadence meters (Hold Time, Flight Time, Observations). After 10 valid sessions, click **Finalize Enrolment**.
 5. **Live Verification Workspace**: Start an active verification session. Type naturally in the verification field. KEYTRACE extracts the 10-feature vector, queries the ML service, and renders real-time `MATCH` (green) or `REVIEW` (amber) feedback.
 6. **Authentication History**: Inspect paginated records of past verification events, including distance scores, active thresholds, and confidence ratings.
 7. **Analytics**: Inspect interactive Recharts diagrams for ROC-AUC curves, genuine vs. impostor score distributions, and match trends over time.
-8. **Admin Panel** (`http://localhost:5173/admin`): Log in as `admin` to monitor aggregate user metrics, ML microservice health, and audit trails.
+8. **Admin Panel** (`http://localhost:5174/admin`): Log in as `admin` to monitor aggregate user metrics, ML microservice health, and audit trails.
 9. **Data Management & Erasure**: Export personal data as a JSON archive or exercise the Right to Erasure (`DELETE /api/v1/account`).
 
 ---
