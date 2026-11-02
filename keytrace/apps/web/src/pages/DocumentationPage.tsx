@@ -207,7 +207,7 @@ export function DocumentationPage() {
 {`[ USER BROWSER ] ──(Physical Keystrokes)──> [ KeystrokeCaptureField (Client) ]
                                                         │ (Zero Characters Transmitted)
                                                         ▼ (HoldMs, FlightMs Intervals)
-[ REACT FRONTEND (Vite / Port 5173) ] ───────────> [ NODE.JS EXPRESS API (Port 4000) ]
+[ REACT FRONTEND (Vite / Port 5174) ] ───────────> [ NODE.JS EXPRESS API (Port 5000) ]
                                                         │
                       ┌─────────────────────────────────┴─────────────────────────────────┐
                       ▼                                                                   ▼
@@ -488,7 +488,7 @@ export function DocumentationPage() {
                     <button
                       onClick={() =>
                         handleCopy(
-                          `curl -X POST http://localhost:4000/api/v1/verification/sessions/SESSION_ID/evaluate \\\n  -H "Content-Type: application/json" \\\n  -H "x-csrf-token: CSRF_TOKEN" \\\n  --cookie "keytrace_session=JWT; keytrace_csrf=CSRF_TOKEN" \\\n  -d '{"schemaVersion":1,"sessionId":"UUID","elapsedMs":8500,"observations":[{"holdMs":90,"flightMs":120}],"inputMethod":"keyboard","consentVersion":"1.0"}'`,
+                          `curl -X POST http://localhost:5000/api/v1/verification/sessions/SESSION_ID/evaluate \\\n  -H "Content-Type: application/json" \\\n  -H "x-csrf-token: CSRF_TOKEN" \\\n  --cookie "keytrace_session=JWT; keytrace_csrf=CSRF_TOKEN" \\\n  -d '{"schemaVersion":1,"sessionId":"UUID","elapsedMs":8500,"observations":[{"holdMs":90,"flightMs":120}],"inputMethod":"keyboard","consentVersion":"1.0"}'`,
                           "curl-evaluate"
                         )
                       }

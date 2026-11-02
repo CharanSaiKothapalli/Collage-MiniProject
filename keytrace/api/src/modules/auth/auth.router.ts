@@ -13,6 +13,7 @@ import {
   LoginRequestSchema,
   ChangePasswordSchema,
   PROFILE_STATUS,
+  USER_ROLE,
 } from "@keytrace/shared";
 
 export const authRouter = Router();
@@ -37,6 +38,10 @@ function setAuthCookies(res: Response, token: string, csrfToken: string) {
   });
 }
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
  * POST /api/v1/auth/register
  */
@@ -46,9 +51,14 @@ authRouter.post(
   validate({ body: RegisterRequestSchema }),
   async (req: Request, res: Response): Promise<void> => {
     const { username, email, password } = req.body;
+    const cleanUsername = username.trim();
+    const cleanEmail = email.toLowerCase().trim();
 
     const existingUser = await User.findOne({
-      $or: [{ username: username.toLowerCase() }, { email: email.toLowerCase() }],
+      $or: [
+        { username: { $regex: new RegExp(`^${escapeRegex(cleanUsername)}$`, "i") } },
+        { email: cleanEmail },
+      ],
     });
 
     if (existingUser) {
@@ -62,10 +72,10 @@ authRouter.post(
 
     const passwordHash = await hashPassword(password);
     const user = await User.create({
-      username,
-      email: email.toLowerCase(),
+      username: cleanUsername,
+      email: cleanEmail,
       passwordHash,
-      role: "user",
+      role: USER_ROLE.USER,
       accountStatus: "active",
       hasConsent: false,
     });
@@ -116,11 +126,12 @@ authRouter.post(
   validate({ body: LoginRequestSchema }),
   async (req: Request, res: Response): Promise<void> => {
     const { emailOrUsername, password } = req.body;
+    const cleanIdentifier = emailOrUsername.trim();
 
     const user = await User.findOne({
       $or: [
-        { username: emailOrUsername },
-        { email: emailOrUsername.toLowerCase() },
+        { username: { $regex: new RegExp(`^${escapeRegex(cleanIdentifier)}$`, "i") } },
+        { email: cleanIdentifier.toLowerCase() },
       ],
     });
 
@@ -136,7 +147,7 @@ authRouter.post(
     const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
       await logAuditEvent({
-        actorUsername: emailOrUsername,
+        actorUsername: cleanIdentifier,
         action: "FAILED_LOGIN_ATTEMPT",
         resourceType: "User",
         ipAddress: req.ip,

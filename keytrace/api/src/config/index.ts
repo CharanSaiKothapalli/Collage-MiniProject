@@ -2,14 +2,16 @@ import dotenv from "dotenv";
 import path from "path";
 
 // Load environment variables from .env
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+dotenv.config({ path: path.resolve(process.cwd(), ".env"), override: true });
+dotenv.config({ path: path.resolve(process.cwd(), "../.env"), override: true });
 
 export const config = {
   env: process.env.NODE_ENV || "development",
   isProduction: process.env.NODE_ENV === "production",
-  port: parseInt(process.env.PORT || "4000", 10),
+  port: parseInt(process.env.PORT || "5000", 10),
+  host: process.env.HOST || "127.0.0.1",
   apiPrefix: process.env.API_PREFIX || "/api/v1",
-  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5174",
   
   // Security
   jwtSecret: process.env.JWT_SECRET || "development-jwt-secret-do-not-use-in-production-replace-with-64-byte-key",
@@ -35,9 +37,9 @@ export const config = {
   
   // Admin Bootstrap
   adminBootstrap: {
-    enabled: process.env.ADMIN_BOOTSTRAP_ENABLED === "true",
+    enabled: process.env.ADMIN_BOOTSTRAP_ENABLED !== undefined ? process.env.ADMIN_BOOTSTRAP_ENABLED === "true" : true,
     username: process.env.ADMIN_BOOTSTRAP_USERNAME || "admin",
     email: process.env.ADMIN_BOOTSTRAP_EMAIL || "admin@keytrace.local",
-    password: process.env.ADMIN_BOOTSTRAP_PASSWORD || "AdminSecurePass123!",
+    password: process.env.ADMIN_BOOTSTRAP_PASSWORD || "Admin1234!",
   }
 };

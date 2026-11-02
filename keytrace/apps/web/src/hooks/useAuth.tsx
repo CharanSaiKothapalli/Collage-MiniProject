@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { api } from "../lib/api.js";
+import { api, setCsrfToken } from "../lib/api.js";
 import { UserDto } from "@keytrace/shared";
 
 interface AuthContextType {
   user: UserDto | null;
   isLoading: boolean;
-  login: (creds: { emailOrUsername: string; password: string }) => Promise<void>;
-  register: (data: { username: string; email: string; password: string }) => Promise<void>;
+  login: (creds: { emailOrUsername: string; password: string }) => Promise<UserDto>;
+  register: (data: { username: string; email: string; password: string }) => Promise<UserDto>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setConsent: (hasConsent: boolean) => void;
@@ -37,18 +37,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
-  const login = async (creds: { emailOrUsername: string; password: string }) => {
+  const login = async (creds: { emailOrUsername: string; password: string }): Promise<UserDto> => {
     const res = await api.auth.login(creds);
     if (res.ok && res.user) {
       setUser(res.user);
+      return res.user;
     }
+    throw new Error((res as any)?.error || "Invalid username or password.");
   };
 
-  const register = async (data: { username: string; email: string; password: string }) => {
+  const register = async (data: { username: string; email: string; password: string }): Promise<UserDto> => {
     const res = await api.auth.register(data);
     if (res.ok && res.user) {
       setUser(res.user);
+      return res.user;
     }
+    throw new Error((res as any)?.error || "Registration failed. Please try again.");
   };
 
   const logout = async () => {
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await api.auth.logout();
     } finally {
       setUser(null);
+      setCsrfToken(null);
     }
   };
 

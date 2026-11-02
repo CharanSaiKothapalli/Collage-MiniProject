@@ -78,7 +78,8 @@ export function VerificationWorkspacePage() {
     },
   });
 
-  const isEnrolled = (user?.sampleCount || 0) >= 1;
+  const sampleCount = statusData?.count ?? user?.sampleCount ?? 0;
+  const isEnrolled = sampleCount >= 1;
 
   if (!isEnrolled) {
     return (

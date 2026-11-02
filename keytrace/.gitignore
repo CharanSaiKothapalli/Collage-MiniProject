@@ -15,6 +15,7 @@ dist/
 build/
 .next/
 out/
+*.tsbuildinfo
 
 # Python virtual environment and cache
 venv/

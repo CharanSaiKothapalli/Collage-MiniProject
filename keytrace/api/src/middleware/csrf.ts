@@ -12,8 +12,14 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction):
     return next();
   }
 
-  // Exempt public auth routes like register & login from CSRF header requirements
-  if (req.path.endsWith("/auth/register") || req.path.endsWith("/auth/login")) {
+  const normalizedPath = (req.path || "").replace(/\/+$/, "");
+
+  // Exempt public auth routes like register, login, and logout from CSRF header requirements
+  if (
+    normalizedPath.endsWith("/auth/register") ||
+    normalizedPath.endsWith("/auth/login") ||
+    normalizedPath.endsWith("/auth/logout")
+  ) {
     return next();
   }
 

@@ -5,9 +5,35 @@ import {
   KeystrokeSessionPayload,
 } from "@keytrace/shared";
 
+let inMemoryCsrfToken: string | null = null;
+
+export function setCsrfToken(token: string | null) {
+  inMemoryCsrfToken = token;
+  if (token) {
+    try {
+      sessionStorage.setItem("keytrace_csrf_backup", token);
+    } catch {}
+  } else {
+    try {
+      sessionStorage.removeItem("keytrace_csrf_backup");
+    } catch {}
+  }
+}
+
 function getCsrfTokenFromCookie(): string | null {
   const match = document.cookie.match(new RegExp("(^| )keytrace_csrf=([^;]+)"));
   return match ? decodeURIComponent(match[2]) : null;
+}
+
+export function getCsrfToken(): string | null {
+  const fromCookie = getCsrfTokenFromCookie();
+  if (fromCookie) return fromCookie;
+  if (inMemoryCsrfToken) return inMemoryCsrfToken;
+  try {
+    return sessionStorage.getItem("keytrace_csrf_backup");
+  } catch {
+    return null;
+  }
 }
 
 export class ApiError extends Error {
@@ -32,8 +58,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers as Record<string, string>),
   };
 
-  // Attach CSRF token if cookie exists
-  const csrf = getCsrfTokenFromCookie();
+  // Attach CSRF token if present
+  const csrf = getCsrfToken();
   if (csrf && !["GET", "HEAD"].includes(options.method?.toUpperCase() || "GET")) {
     headers["X-CSRF-Token"] = csrf;
   }
@@ -51,6 +77,11 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     data = await response.json();
   } else {
     data = await response.text();
+  }
+
+  // Cache any CSRF token provided in JSON response
+  if (data && typeof data === "object" && data.csrfToken) {
+    setCsrfToken(data.csrfToken);
   }
 
   if (!response.ok) {

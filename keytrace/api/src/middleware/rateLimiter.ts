@@ -15,12 +15,12 @@ export const apiRateLimiter = rateLimit({
 
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: config.authRateLimitMax,
+  max: config.env === "development" ? 500 : config.authRateLimitMax,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     ok: false,
-    error: "Too many login/registration attempts. Please wait 15 minutes before retrying.",
+    error: "Too many login/registration attempts. Please wait a few moments before retrying.",
     code: "AUTH_RATE_LIMIT_EXCEEDED",
   },
 });

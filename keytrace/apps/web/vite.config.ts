@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
@@ -11,17 +11,23 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    host: "0.0.0.0",
+    port: 5174,
+    strictPort: true,
     proxy: {
       "/api": {
-        target: "http://localhost:4000",
+        target: process.env.VITE_API_BASE_URL || "http://127.0.0.1:5000",
         changeOrigin: true,
       },
       "/health": {
-        target: "http://localhost:4000",
+        target: process.env.VITE_API_BASE_URL || "http://127.0.0.1:5000",
         changeOrigin: true,
       },
     },
+  },
+  preview: {
+    port: 5174,
+    strictPort: true,
   },
   test: {
     globals: true,
