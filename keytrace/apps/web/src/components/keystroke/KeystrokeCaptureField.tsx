@@ -7,7 +7,7 @@ import {
   ENROLLMENT_THRESHOLDS,
   CURRENT_CONSENT_VERSION,
 } from "@keytrace/shared";
-import { ShieldCheck, AlertCircle, RefreshCw, Activity, Terminal, Clock, Hash, Zap } from "lucide-react";
+import { ShieldCheck, AlertCircle, RefreshCw, Activity, Clock, Hash, Zap } from "lucide-react";
 
 interface KeystrokeCaptureFieldProps {
   onSessionComplete: (payload: KeystrokeSessionPayload) => Promise<void> | void;
@@ -141,23 +141,23 @@ export function KeystrokeCaptureField({
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* Target prompt guidance box */}
-      <div className="bg-[#0b1120]/80 border border-slate-700/80 rounded-lg p-4 relative backdrop-blur-md shadow-sm">
-        <div className="flex items-center justify-between mb-2.5 pb-2.5 border-b border-slate-800/80">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-            <Terminal className="w-3.5 h-3.5 text-amber-400" /> Reference Biometric Text
+      <div className="bg-zinc-900/40 border border-white/[0.08] rounded-2xl p-4.5 relative backdrop-blur-xl">
+        <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-white/[0.06]">
+          <span className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
+            Reference Biometric Phrase
           </span>
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-widest font-semibold">
+          <span className="text-[11px] text-zinc-500 font-medium">
             Type naturally at your normal speed
           </span>
         </div>
-        <p className="text-sm font-mono text-slate-100 leading-relaxed bg-slate-950/80 p-3.5 rounded-md border border-slate-800/80 select-none shadow-inner">
+        <p className="text-sm font-sans text-zinc-100 leading-relaxed bg-zinc-950/70 p-3.5 rounded-xl border border-white/[0.06] select-none shadow-inner">
           {targetPromptText}
         </p>
       </div>
 
       {/* Paste warning banner */}
       {pasteWarning && (
-        <div className="p-3.5 bg-rose-950/50 border border-rose-500/50 rounded-lg flex items-center gap-2 text-xs font-mono text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.25)]">
+        <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-xs text-rose-300">
           <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
           <span>[ALERT] Pasting is disallowed. Behavioural dynamics requires physical keystroke transitions.</span>
         </div>
@@ -173,14 +173,14 @@ export function KeystrokeCaptureField({
           onKeyUp={handleKeyUp}
           onPaste={handlePaste}
           placeholder={placeholder}
-          className="w-full bg-slate-950/80 border border-slate-700/80 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/25 rounded-lg p-4 text-sm font-mono text-slate-100 placeholder:text-slate-500 outline-none transition-all resize-none shadow-inner"
+          className="w-full bg-zinc-900/30 border border-white/10 focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/20 rounded-2xl p-4 text-sm font-sans text-zinc-100 placeholder:text-zinc-500 outline-none transition-all resize-none shadow-inner"
         />
 
-        {/* Live Keystroke Telemetry HUD & Spectrum */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-slate-900/95 px-3 py-1.5 rounded-lg border border-cyan-500/50 text-xs font-mono text-slate-200 backdrop-blur-xl shadow-[0_0_20px_rgba(6,182,212,0.3)] pointer-events-none select-none">
+        {/* Live Keystroke Telemetry HUD */}
+        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-zinc-950/90 px-3 py-1.5 rounded-xl border border-white/10 text-xs font-mono text-zinc-300 backdrop-blur-xl shadow-sm pointer-events-none select-none">
           {/* Animated Cadence Waveform */}
-          <div className="hidden sm:flex items-end gap-1 h-5 px-1 border-r border-slate-700/80 pr-2.5">
-            {(observations.length > 0 ? observations.slice(-10) : [1, 2, 3, 4, 5, 6, 7, 8]).map((item, idx) => {
+          <div className="hidden sm:flex items-end gap-1 h-4 px-1 border-r border-zinc-800 pr-2.5">
+            {(observations.length > 0 ? observations.slice(-8) : [1, 2, 3, 4, 5, 6, 7, 8]).map((item, idx) => {
               const heightPercent =
                 typeof item === "number"
                   ? 25 + (idx % 3) * 15
@@ -192,9 +192,9 @@ export function KeystrokeCaptureField({
                     "w-1 rounded-full transition-all duration-150",
                     observations.length > 0
                       ? idx % 2 === 0
-                        ? "bg-cyan-400 shadow-[0_0_6px_#22d3ee]"
-                        : "bg-amber-400 shadow-[0_0_6px_#fbbf24]"
-                      : "bg-slate-700 opacity-40"
+                        ? "bg-indigo-400"
+                        : "bg-sky-400"
+                      : "bg-zinc-800"
                   )}
                   style={{ height: `${heightPercent}%` }}
                 />
@@ -203,61 +203,61 @@ export function KeystrokeCaptureField({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-slate-400 font-semibold">HOLD:</span>
-            <span className={cn(currentHoldMs ? "text-amber-300 font-bold" : "text-slate-500")}>
+            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-zinc-500">Hold:</span>
+            <span className={cn(currentHoldMs ? "text-zinc-100 font-semibold" : "text-zinc-600")}>
               {currentHoldMs ? `${currentHoldMs}ms` : "—"}
             </span>
           </div>
-          <div className="w-[1px] h-3.5 bg-slate-700" />
+          <div className="w-[1px] h-3.5 bg-zinc-800" />
           <div className="flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-slate-400 font-semibold">FLIGHT:</span>
-            <span className={cn(currentFlightMs ? "text-cyan-300 font-bold" : "text-slate-500")}>
+            <Zap className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-zinc-500">Flight:</span>
+            <span className={cn(currentFlightMs ? "text-zinc-100 font-semibold" : "text-zinc-600")}>
               {currentFlightMs ? `${currentFlightMs}ms` : "—"}
             </span>
           </div>
-          <div className="w-[1px] h-3.5 bg-slate-700" />
+          <div className="w-[1px] h-3.5 bg-zinc-800" />
           <div className="flex items-center gap-1.5">
-            <Hash className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-slate-400 font-semibold">OBS:</span>
-            <span className="text-emerald-300 font-bold">{observations.length}</span>
+            <Hash className="w-3.5 h-3.5 text-zinc-400" />
+            <span className="text-zinc-500">Obs:</span>
+            <span className="text-emerald-400 font-semibold">{observations.length}</span>
           </div>
         </div>
       </div>
 
-      {/* Sharp Progress Bar & Actions */}
-      <div className="bg-[#0b101d]/80 border border-slate-800/80 rounded-lg p-3.5 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-md">
+      {/* Progress Bar & Actions */}
+      <div className="bg-zinc-900/40 border border-white/[0.08] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl">
         <div className="w-full sm:w-1/2 flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-300 uppercase tracking-wider flex items-center gap-1.5 font-medium">
-              <Activity className="w-3.5 h-3.5 text-cyan-400" /> Sample Observations
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-indigo-400" /> Sample Observations
             </span>
-            <span className="text-slate-200 font-bold">
+            <span className="text-zinc-400 font-mono text-[11px]">
               {observations.length} / {minObservations} min required
             </span>
           </div>
-          <div className="w-full h-2 bg-slate-950 rounded-full border border-slate-800 overflow-hidden">
+          <div className="w-full h-1.5 bg-zinc-950 rounded-full border border-white/5 overflow-hidden">
             <div
               className={cn(
                 "h-full transition-all duration-200 rounded-full",
                 isReady
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                  : "bg-gradient-to-r from-amber-500 to-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]"
+                  ? "bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                  : "bg-indigo-500"
               )}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={resetSession}
             disabled={observations.length === 0 || isSubmitting}
-            className="text-slate-400 hover:text-white"
+            className="text-zinc-400 hover:text-white"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Clear
           </Button>
@@ -276,10 +276,10 @@ export function KeystrokeCaptureField({
       </div>
 
       {/* Security Privacy Assurance */}
-      <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] shrink-0 animate-pulse" />
+      <div className="text-xs text-zinc-500 flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
         <span>
-          [PRIVACY GUARANTEE] Typed characters are discarded locally. Only millisecond hold/flight durations are transmitted.
+          Zero Keylogging: Typed characters are never logged or transmitted. Only millisecond timing intervals are processed.
         </span>
       </div>
     </div>

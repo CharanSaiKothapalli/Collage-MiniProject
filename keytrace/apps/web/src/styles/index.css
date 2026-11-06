@@ -5,182 +5,158 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --background: #07090e;
-    --surface: #0d121f;
-    --surface-elevated: #121829;
-    --border: #1e283d;
-    --border-bright: #2d3c5c;
-    --accent: #f59e0b;
-    --cyan: #06b6d4;
-    --match: #10b981;
-    --review: #f59e0b;
-    --alert: #f43f5e;
+    --background: #080B12;
+    --secondary-bg: #0D1320;
+    --surface: #111927;
+    --surface-elevated: #172235;
+    --border: #243247;
+    --border-bright: #344560;
+    --accent: #35D6E8;
+    --secondary-accent: #8B7CFF;
+    --success: #32D6A0;
+    --warning: #FFBF55;
+    --danger: #FF647C;
+    --primary-text: #F4F7FC;
+    --secondary-text: #94A3B8;
   }
 
   body {
-    background-color: #07090e;
-    color: #f8fafc;
+    background-color: #080B12;
+    color: #F4F7FC;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    letter-spacing: -0.012em;
+    letter-spacing: -0.011em;
     overflow-x: hidden;
   }
 
-  /* Sleek modern cyber scrollbar */
+  /* Sleek minimalist scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #07090e;
+    background: #080B12;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e283d;
+    background: #243247;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #06b6d4;
+    background: #344560;
   }
 }
 
-/* Atmospheric Background Mesh and Grid */
+/* Atmospheric Background Mesh and Grid (Linear / Vercel style) */
+.bg-ambient-radial {
+  background: 
+    radial-gradient(ellipse 70% 40% at 50% -10%, rgba(53, 214, 232, 0.08), transparent 70%),
+    radial-gradient(circle at 85% 15%, rgba(139, 124, 255, 0.06), transparent 50%),
+    #080B12;
+}
+
 .bg-cyber-radial {
   background: 
-    radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.09) 0%, transparent 45%),
-    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.07) 0%, transparent 40%),
-    radial-gradient(circle at 15% 60%, rgba(99, 102, 241, 0.06) 0%, transparent 45%),
-    #07090e;
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(53, 214, 232, 0.07), transparent 70%),
+    radial-gradient(circle at 85% 15%, rgba(139, 124, 255, 0.05), transparent 45%),
+    #080B12;
 }
 
 .bg-grid-technical {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(36, 50, 71, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(36, 50, 71, 0.35) 1px, transparent 1px);
 }
 
-.bg-dots-technical {
-  background-image: radial-gradient(rgba(6, 182, 212, 0.15) 1px, transparent 0);
+.bg-dots-subtle {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* Glassmorphism Cards with Luminescent Depth */
+/* Obsidian Pulse Cards (12px / 16px radius, subtle border) */
 .keytrace-card {
-  background: rgba(13, 18, 31, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(30, 40, 61, 0.85);
-  border-radius: 8px;
+  background: #111927;
+  border: 1px solid #243247;
+  border-radius: 14px;
   position: relative;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
 }
 
 .keytrace-card:hover {
-  border-color: rgba(6, 182, 212, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.12);
+  border-color: #344560;
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
 }
 
 .keytrace-card-elevated {
-  background: rgba(18, 24, 41, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(45, 60, 92, 0.8);
-  border-radius: 8px;
-  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.45);
+  background: #172235;
+  border: 1px solid #243247;
+  border-radius: 14px;
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
 .keytrace-card-elevated:hover {
-  border-color: rgba(245, 158, 11, 0.35);
-  box-shadow: 0 12px 36px -5px rgba(245, 158, 11, 0.15);
+  border-color: rgba(53, 214, 232, 0.3);
+  box-shadow: 0 16px 42px -4px rgba(0, 0, 0, 0.75), inset 0 1px 0 0 rgba(53, 214, 232, 0.1);
 }
 
-/* Corner Crosshair Decoration */
-.corner-ticks {
-  position: relative;
-}
-.corner-ticks::before,
-.corner-ticks::after {
-  content: "";
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  pointer-events: none;
-}
-.corner-ticks::before {
-  top: -1px;
-  left: -1px;
-  border-top: 2px solid #06b6d4;
-  border-left: 2px solid #06b6d4;
-}
-.corner-ticks::after {
-  bottom: -1px;
-  right: -1px;
-  border-bottom: 2px solid #f59e0b;
-  border-right: 2px solid #f59e0b;
-}
-
-/* Luminous Glow Effects */
+/* Status Indicator Glows */
 .glow-accent {
-  box-shadow: 0 0 24px -2px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 20px -4px rgba(53, 214, 232, 0.25);
 }
 
-.glow-cyan {
-  box-shadow: 0 0 24px -2px rgba(6, 182, 212, 0.35);
+.glow-violet {
+  box-shadow: 0 0 20px -4px rgba(139, 124, 255, 0.25);
 }
 
 .glow-match {
-  box-shadow: 0 0 24px -2px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 20px -4px rgba(50, 214, 160, 0.25);
 }
 
 .glow-review {
-  box-shadow: 0 0 24px -2px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 20px -4px rgba(255, 191, 85, 0.25);
 }
 
 .glow-alert {
-  box-shadow: 0 0 24px -2px rgba(244, 63, 94, 0.35);
+  box-shadow: 0 0 20px -4px rgba(255, 100, 124, 0.25);
 }
 
-/* High-Impact Gradient Typography */
-.text-gradient-amber {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #ea580c 100%);
+/* SaaS Typography Gradients */
+.text-gradient-white {
+  background: linear-gradient(180deg, #F4F7FC 0%, #94A3B8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #67e8f9 0%, #06b6d4 50%, #0284c7 100%);
+  background: linear-gradient(135deg, #6DE3F2 0%, #35D6E8 50%, #21BCD0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.text-gradient-silver {
-  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 60%, #94a3b8 100%);
+.text-gradient-violet {
+  background: linear-gradient(135deg, #A59AFF 0%, #8B7CFF 50%, #7261EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Monospace scanline effect for biometric terminals */
-.scanlines {
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%, 
-    rgba(0, 0, 0, 0.25) 50%
-  ), linear-gradient(
-    90deg,
-    rgba(6, 182, 212, 0.03),
-    rgba(245, 158, 11, 0.02),
-    rgba(16, 185, 129, 0.02)
-  );
-  background-size: 100% 2px, 3px 100%;
+.text-gradient-amber {
+  background: linear-gradient(135deg, #FFD080 0%, #FFBF55 50%, #E69B20 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Cyber Glassmorphism Container with Specular Sheen */
+/* Glass Container */
 .cyber-glass {
-  background: linear-gradient(135deg, rgba(13, 18, 31, 0.85) 0%, rgba(7, 10, 18, 0.92) 100%);
+  background: rgba(17, 25, 39, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(45, 60, 92, 0.6);
+  border: 1px solid #243247;
+  border-radius: 14px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
 }
 
 .cyber-glass::before {
@@ -190,61 +166,5 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.6) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(53, 214, 232, 0.25) 50%, transparent 100%);
 }
-
-.cyber-glass-amber::before {
-  background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.7) 50%, transparent 100%);
-}
-
-/* Luminous Sheen Hover Sweep */
-.sheen-hover {
-  position: relative;
-  overflow: hidden;
-}
-.sheen-hover::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -60%;
-  width: 20%;
-  height: 200%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: rotate(30deg);
-  transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
-  pointer-events: none;
-}
-.sheen-hover:hover::after {
-  left: 120%;
-}
-
-/* Pulsing Biometric Radar Ring */
-.radar-ring {
-  position: relative;
-}
-.radar-ring::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 9999px;
-  border: 1px dashed rgba(6, 182, 212, 0.3);
-  animation: radarSweep 20s linear infinite;
-}
-
-/* Live Equalizer Bars */
-.equalizer-bar {
-  animation: equalizer 1.4s ease-in-out infinite alternate;
-  transform-origin: bottom;
-}
-.equalizer-bar:nth-child(2) { animation-delay: 0.15s; }
-.equalizer-bar:nth-child(3) { animation-delay: 0.3s; }
-.equalizer-bar:nth-child(4) { animation-delay: 0.45s; }
-.equalizer-bar:nth-child(5) { animation-delay: 0.6s; }
-.equalizer-bar:nth-child(6) { animation-delay: 0.2s; }
-.equalizer-bar:nth-child(7) { animation-delay: 0.35s; }
-.equalizer-bar:nth-child(8) { animation-delay: 0.5s; }

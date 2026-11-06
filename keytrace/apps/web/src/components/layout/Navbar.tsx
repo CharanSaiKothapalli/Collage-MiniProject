@@ -15,10 +15,16 @@ import {
   BookOpen,
   Menu,
   X,
+  Search,
+  Zap,
 } from "lucide-react";
 import { PROFILE_STATUS } from "@keytrace/shared";
 
-export function Navbar() {
+interface NavbarProps {
+  onOpenPalette?: () => void;
+}
+
+export function Navbar({ onOpenPalette }: NavbarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,166 +38,206 @@ export function Navbar() {
 
   const isActive = (path: string) => location.pathname === path;
 
+  const handleLiveMonitorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+    if (location.pathname !== "/dashboard") {
+      navigate("/dashboard#live-monitor");
+      setTimeout(() => {
+        const el = document.getElementById("live-monitor");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 150);
+    } else {
+      const el = document.getElementById("live-monitor");
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-cyan-500/25 bg-[#050811]/90 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.6)] select-none">
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 w-full border-b border-[#243247] bg-[#080B12]/85 backdrop-blur-xl select-none">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo */}
         <Link
           to={user ? "/dashboard" : "/"}
           onClick={() => setMobileMenuOpen(false)}
-          className="flex items-center gap-3.5 group"
+          className="flex items-center gap-3 group shrink-0"
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/25 via-amber-500/15 to-indigo-500/25 border border-cyan-500/60 flex items-center justify-center text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.4)] group-hover:shadow-[0_0_26px_rgba(6,182,212,0.7)] group-hover:border-cyan-300 transition-all">
-            <Shield className="w-4.5 h-4.5 text-cyan-400 group-hover:text-cyan-200 transition-colors" />
+          <div className="w-8 h-8 rounded-xl bg-[#111927] border border-[#243247] flex items-center justify-center text-[#35D6E8] shadow-sm group-hover:border-[#35D6E8]/40 transition-all">
+            <Shield className="w-4 h-4 text-[#35D6E8]" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold tracking-tight font-tech text-base leading-none flex items-center gap-2">
-              <span className="bg-gradient-to-r from-amber-400 via-orange-300 to-cyan-400 bg-clip-text text-transparent font-extrabold text-lg">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold tracking-tight text-[#F4F7FC] text-sm">
                 KEYTRACE
               </span>
-              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/50 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.35)] font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                ONLINE
+              <span className="text-[10px] text-[#32D6A0] bg-[#32D6A0]/10 border border-[#32D6A0]/20 rounded-full px-2 py-0.5 flex items-center gap-1.5 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#32D6A0] animate-pulse" />
+                SYSTEM OPERATIONAL
               </span>
-            </span>
-            <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest hidden sm:inline mt-0.5 font-semibold">
-              Behavioural Biometrics
+            </div>
+            <span className="text-[10px] text-[#94A3B8] hidden sm:inline leading-none font-mono">
+              Continuous Biometric Defense
             </span>
           </div>
         </Link>
 
         {/* Desktop Navigation */}
         {user ? (
-          <nav className="hidden md:flex items-center gap-1.5 text-xs font-mono uppercase">
+          <nav className="hidden xl:flex items-center gap-1 text-xs font-medium">
             <Link
               to="/dashboard"
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
-                isActive("/dashboard")
-                  ? "bg-cyan-950/50 text-cyan-300 border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold"
-                  : "border-transparent text-slate-300 hover:text-white hover:bg-slate-800/60"
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                isActive("/dashboard") && location.hash !== "#live-monitor"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
               }`}
             >
-              <Activity className="w-3.5 h-3.5 text-cyan-400" /> Dashboard
+              <Activity className="w-3.5 h-3.5" /> Dashboard
             </Link>
+
+            <a
+              href="#live-monitor"
+              onClick={handleLiveMonitorClick}
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                location.hash === "#live-monitor"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-[#35D6E8]" /> Live Monitor
+            </a>
 
             <Link
               to="/enrollment"
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                 isActive("/enrollment")
-                  ? "bg-cyan-950/50 text-cyan-300 border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold"
-                  : "border-transparent text-slate-300 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
               }`}
             >
-              <UserCheck className="w-3.5 h-3.5 text-cyan-400" /> Enrolment
+              <UserCheck className="w-3.5 h-3.5" /> Enrollment
             </Link>
 
             <Link
               to="/verification"
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                 isActive("/verification")
-                  ? "bg-amber-950/50 text-amber-300 border-amber-500/60 shadow-[0_0_12px_rgba(245,158,11,0.25)] font-semibold"
-                  : "border-transparent text-slate-300 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
               }`}
             >
-              <Shield className="w-3.5 h-3.5 text-amber-400" /> Verification
+              <Shield className="w-3.5 h-3.5" /> Verification
             </Link>
 
             <Link
               to="/history"
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                 isActive("/history")
-                  ? "bg-cyan-950/50 text-cyan-300 border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold"
-                  : "border-transparent text-slate-300 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
               }`}
             >
-              <History className="w-3.5 h-3.5 text-cyan-400" /> History
+              <History className="w-3.5 h-3.5" /> History
             </Link>
 
             <Link
               to="/analytics"
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                 isActive("/analytics")
-                  ? "bg-cyan-950/50 text-cyan-300 border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-semibold"
-                  : "border-transparent text-slate-300 hover:text-white hover:bg-slate-800/60"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
               }`}
             >
-              <BarChart3 className="w-3.5 h-3.5 text-cyan-400" /> Analytics
+              <BarChart3 className="w-3.5 h-3.5" /> Analytics
             </Link>
 
             <Link
               to="/docs"
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
+              className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                 isActive("/docs")
-                  ? "bg-sky-950/50 text-sky-300 border-sky-500/60 shadow-[0_0_12px_rgba(56,189,248,0.25)] font-semibold"
-                  : "border-transparent text-slate-300 hover:text-sky-300 hover:bg-slate-800/60"
+                  ? "bg-[#172235] text-[#35D6E8] border border-[#243247]"
+                  : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#111927]"
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5 text-sky-400" /> Docs
+              <BookOpen className="w-3.5 h-3.5" /> Docs
             </Link>
 
             {user.role === "admin" && (
               <Link
                 to="/admin"
-                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 border ${
+                className={`px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                   isActive("/admin")
-                    ? "bg-amber-950/50 text-amber-300 border-amber-500/60 shadow-[0_0_12px_rgba(245,158,11,0.25)] font-semibold"
-                    : "border-transparent text-amber-400/90 hover:text-amber-300 hover:bg-amber-950/20"
+                    ? "bg-[#FFBF55]/10 text-[#FFBF55] border border-[#FFBF55]/30"
+                    : "text-[#FFBF55]/80 hover:text-[#FFBF55] hover:bg-[#FFBF55]/10"
                 }`}
               >
-                <Cpu className="w-3.5 h-3.5 text-amber-400" /> Admin
+                <Cpu className="w-3.5 h-3.5" /> Admin
               </Link>
             )}
           </nav>
         ) : (
-          <nav className="hidden md:flex items-center gap-5 text-xs font-mono uppercase text-slate-300">
-            <Link to="/#how-it-works" className="hover:text-cyan-400 transition-colors">
-              [ 01 // HOW IT WORKS ]
+          <nav className="hidden md:flex items-center gap-6 text-xs text-[#94A3B8]">
+            <Link to="/#how-it-works" className="hover:text-[#F4F7FC] transition-colors">
+              How It Works
             </Link>
-            <Link to="/#architecture" className="hover:text-cyan-400 transition-colors">
-              [ 02 // ARCHITECTURE ]
+            <Link to="/#architecture" className="hover:text-[#F4F7FC] transition-colors">
+              Architecture
             </Link>
-            <Link to="/docs" className="hover:text-amber-400 text-slate-200 transition-colors flex items-center gap-1.5 font-bold">
-              <BookOpen className="w-3.5 h-3.5 text-amber-400" /> [ 03 // DOCUMENTATION ]
+            <Link to="/docs" className="hover:text-[#F4F7FC] transition-colors flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5" /> Documentation
             </Link>
           </nav>
         )}
 
         {/* Right action group (Desktop) */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5">
+          {/* Quick Command Palette Button (Cmd+K) */}
+          <button
+            type="button"
+            onClick={onOpenPalette || (() => window.dispatchEvent(new CustomEvent("open-command-palette")))}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#111927] hover:bg-[#172235] border border-[#243247] hover:border-[#344560] text-xs text-[#94A3B8] hover:text-[#F4F7FC] transition-all"
+            title="Search commands (⌘K / Ctrl+K)"
+          >
+            <Search className="w-3.5 h-3.5 text-[#35D6E8]" />
+            <span className="hidden md:inline">Search</span>
+            <kbd className="font-mono text-[10px] bg-[#080B12] px-1.5 py-0.5 rounded border border-[#243247] text-[#94A3B8]">
+              ⌘K
+            </kbd>
+          </button>
+
           {user ? (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {/* Profile status pill */}
               <div className="hidden lg:flex items-center">
                 {user.profileStatus === PROFILE_STATUS.READY_FOR_TESTING ? (
-                  <Badge variant="match">PROFILE READY</Badge>
+                  <Badge variant="match">Profile Baseline Ready</Badge>
                 ) : user.profileStatus === PROFILE_STATUS.ENROLLING ? (
-                  <Badge variant="review">{user.sampleCount}/10 ENROLLING</Badge>
+                  <Badge variant="review">{user.sampleCount}/10 Baseline Enrolling</Badge>
                 ) : (
-                  <Badge variant="neutral">NOT ENROLLED</Badge>
+                  <Badge variant="neutral">Not Enrolled</Badge>
                 )}
               </div>
 
               <Link
                 to="/settings"
-                className="p-2 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 border border-slate-700/80 hover:border-cyan-500/50 transition-all shadow-sm"
-                title="Settings & Privacy"
+                className="p-2 rounded-lg bg-[#111927] hover:bg-[#172235] text-[#94A3B8] hover:text-[#F4F7FC] border border-[#243247] transition-all"
+                title="Profile & Biometric Settings"
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Settings className="w-4 h-4" />
               </Link>
 
               <Button
                 variant="ghost"
                 size="xs"
                 onClick={handleLogout}
-                className="text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 transition-colors"
+                className="text-[#94A3B8] hover:text-[#FF647C] hover:bg-[#FF647C]/10 transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Logout</span>
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <Link to="/login">
                 <Button variant="ghost" size="sm">
                   Sign In
@@ -207,115 +253,137 @@ export function Navbar() {
         </div>
 
         {/* Mobile Hamburger Toggle Button */}
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex xl:hidden items-center gap-2">
+          <button
+            type="button"
+            onClick={onOpenPalette || (() => window.dispatchEvent(new CustomEvent("open-command-palette")))}
+            className="p-2 rounded-lg bg-[#111927] border border-[#243247] text-[#94A3B8] hover:text-[#F4F7FC]"
+            aria-label="Open command palette"
+          >
+            <Search className="w-4 h-4 text-[#35D6E8]" />
+          </button>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-300 hover:text-white focus:outline-none"
+            className="p-2 rounded-lg bg-[#111927] border border-[#243247] text-[#F4F7FC]"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5 text-cyan-400" />}
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-[#07090e]/95 backdrop-blur-2xl px-4 py-4 shadow-2xl flex flex-col gap-3 font-mono text-xs uppercase animate-in slide-in-from-top-2 duration-200">
+        <div className="xl:hidden border-t border-[#243247] bg-[#080B12]/98 backdrop-blur-2xl px-4 py-4 shadow-2xl flex flex-col gap-2 text-sm animate-in slide-in-from-top-2 duration-150">
           {user ? (
             <>
-              <div className="pb-3 border-b border-slate-800 flex items-center justify-between text-slate-400">
-                <span className="text-white font-bold">{user.username}</span>
-                <span className="text-[10px] text-cyan-400">{user.role}</span>
+              <div className="pb-3 border-b border-[#243247] flex items-center justify-between text-[#94A3B8]">
+                <div className="flex flex-col">
+                  <span className="text-[#F4F7FC] font-medium text-xs">{user.username}</span>
+                  <span className="text-[10px] text-[#35D6E8] font-mono capitalize">{user.role}</span>
+                </div>
+                {user.profileStatus === PROFILE_STATUS.READY_FOR_TESTING ? (
+                  <Badge variant="match">Baseline Ready</Badge>
+                ) : (
+                  <Badge variant="review">{user.sampleCount}/10 Samples</Badge>
+                )}
               </div>
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/dashboard") ? "bg-cyan-950/60 text-cyan-300 font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/dashboard") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
-                <Activity className="w-4 h-4 text-cyan-400" /> Dashboard
+                <Activity className="w-4 h-4" /> Dashboard
               </Link>
+              <a
+                href="#live-monitor"
+                onClick={handleLiveMonitorClick}
+                className="px-3 py-2 rounded-lg flex items-center gap-2 text-xs text-[#94A3B8] hover:text-[#F4F7FC]"
+              >
+                <Zap className="w-4 h-4 text-[#35D6E8]" /> Live Monitor
+              </a>
               <Link
                 to="/enrollment"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/enrollment") ? "bg-cyan-950/60 text-cyan-300 font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/enrollment") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
-                <UserCheck className="w-4 h-4 text-cyan-400" /> Enrolment
+                <UserCheck className="w-4 h-4" /> Enrollment
               </Link>
               <Link
                 to="/verification"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/verification") ? "bg-amber-950/60 text-amber-300 font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/verification") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
-                <Shield className="w-4 h-4 text-amber-400" /> Verification
+                <Shield className="w-4 h-4" /> Verification
               </Link>
               <Link
                 to="/history"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/history") ? "bg-cyan-950/60 text-cyan-300 font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/history") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
-                <History className="w-4 h-4 text-cyan-400" /> History
+                <History className="w-4 h-4" /> History
               </Link>
               <Link
                 to="/analytics"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/analytics") ? "bg-cyan-950/60 text-cyan-300 font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/analytics") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
-                <BarChart3 className="w-4 h-4 text-cyan-400" /> Analytics
+                <BarChart3 className="w-4 h-4" /> Analytics
               </Link>
               <Link
                 to="/docs"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/docs") ? "bg-sky-950/60 text-sky-300 font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/docs") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
-                <BookOpen className="w-4 h-4 text-sky-400" /> Documentation
+                <BookOpen className="w-4 h-4" /> Documentation
               </Link>
               {user.role === "admin" && (
                 <Link
                   to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                    isActive("/admin") ? "bg-amber-950/60 text-amber-300 font-semibold" : "text-amber-400"
+                  className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                    isActive("/admin") ? "bg-[#FFBF55]/10 text-[#FFBF55] font-medium" : "text-[#FFBF55]"
                   }`}
                 >
-                  <Cpu className="w-4 h-4 text-amber-400" /> Administration
+                  <Cpu className="w-4 h-4" /> Administration
                 </Link>
               )}
               <Link
                 to="/settings"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 rounded-md flex items-center gap-2 ${
-                  isActive("/settings") ? "bg-slate-800 text-white font-semibold" : "text-slate-300"
+                className={`px-3 py-2 rounded-lg flex items-center gap-2 text-xs ${
+                  isActive("/settings") ? "bg-[#172235] text-[#35D6E8] font-medium" : "text-[#94A3B8] hover:text-[#F4F7FC]"
                 }`}
               >
                 <Settings className="w-4 h-4" /> Settings & Privacy
               </Link>
-              <div className="pt-2 border-t border-slate-800">
+              <div className="pt-2 border-t border-[#243247]">
                 <Button variant="danger" size="sm" onClick={handleLogout} className="w-full justify-center">
                   <LogOut className="w-3.5 h-3.5 mr-1.5" /> Sign Out
                 </Button>
               </div>
             </>
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2">
               <Link
                 to="/docs"
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-md text-slate-300 hover:text-white flex items-center gap-2"
+                className="px-3 py-2 rounded-lg text-[#94A3B8] hover:text-[#F4F7FC] flex items-center gap-2 text-xs"
               >
-                <BookOpen className="w-4 h-4 text-amber-400" /> Documentation
+                <BookOpen className="w-4 h-4 text-[#35D6E8]" /> Documentation
               </Link>
               <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                 <Button variant="ghost" size="md" className="w-full justify-center">

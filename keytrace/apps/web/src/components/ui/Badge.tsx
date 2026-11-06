@@ -2,36 +2,57 @@ import React from "react";
 import { cn } from "../../lib/utils.js";
 import { VERIFICATION_DECISION, VerificationDecisionType } from "@keytrace/shared";
 
+export type BadgeVariant =
+  | "default"
+  | "match"
+  | "review"
+  | "alert"
+  | "neutral"
+  | "accent"
+  | "cyan"
+  | "warning"
+  | "danger";
+
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "match" | "review" | "alert" | "neutral" | "accent" | "cyan";
+  variant?: BadgeVariant;
   glow?: boolean;
 }
 
-export function Badge({ className, variant = "default", glow = false, children, ...props }: BadgeProps) {
-  const styles = {
-    default: "bg-slate-900/80 text-slate-200 border-slate-700/80",
-    match: "bg-emerald-950/60 text-emerald-300 border-emerald-500/50 shadow-[0_0_14px_rgba(16,185,129,0.25)]",
-    review: "bg-amber-950/60 text-amber-300 border-amber-500/50 shadow-[0_0_14px_rgba(245,158,11,0.25)]",
-    alert: "bg-rose-950/60 text-rose-300 border-rose-500/50 shadow-[0_0_14px_rgba(244,63,94,0.25)]",
-    neutral: "bg-slate-900/80 text-slate-400 border-slate-800",
-    accent: "bg-amber-950/60 text-amber-300 border-amber-500/50 shadow-[0_0_14px_rgba(245,158,11,0.25)]",
-    cyan: "bg-cyan-950/60 text-cyan-300 border-cyan-500/50 shadow-[0_0_14px_rgba(6,182,212,0.25)]",
+export function Badge({
+  className,
+  variant = "default",
+  glow = false,
+  children,
+  ...props
+}: BadgeProps) {
+  const styles: Record<BadgeVariant, string> = {
+    default: "bg-[#172235] text-[#F4F7FC] border-[#243247]",
+    match: "bg-[#32D6A0]/10 text-[#32D6A0] border-[#32D6A0]/25",
+    review: "bg-[#FFBF55]/10 text-[#FFBF55] border-[#FFBF55]/25",
+    warning: "bg-[#FFBF55]/10 text-[#FFBF55] border-[#FFBF55]/25",
+    alert: "bg-[#FF647C]/10 text-[#FF647C] border-[#FF647C]/25",
+    danger: "bg-[#FF647C]/10 text-[#FF647C] border-[#FF647C]/25",
+    neutral: "bg-[#0D1320] text-[#94A3B8] border-[#243247]",
+    accent: "bg-[#35D6E8]/10 text-[#35D6E8] border-[#35D6E8]/25",
+    cyan: "bg-[#35D6E8]/10 text-[#35D6E8] border-[#35D6E8]/25",
   };
 
-  const glowStyles = {
-    default: "shadow-[0_0_12px_rgba(148,163,184,0.3)]",
-    match: "shadow-[0_0_16px_rgba(16,185,129,0.5)] border-emerald-400/80",
-    review: "shadow-[0_0_16px_rgba(245,158,11,0.5)] border-amber-400/80",
-    alert: "shadow-[0_0_16px_rgba(244,63,94,0.5)] border-rose-400/80",
+  const glowStyles: Record<BadgeVariant, string> = {
+    default: "shadow-[0_0_10px_rgba(255,255,255,0.06)]",
+    match: "shadow-[0_0_12px_rgba(50,214,160,0.25)] border-[#32D6A0]/35",
+    review: "shadow-[0_0_12px_rgba(255,191,85,0.25)] border-[#FFBF55]/35",
+    warning: "shadow-[0_0_12px_rgba(255,191,85,0.25)] border-[#FFBF55]/35",
+    alert: "shadow-[0_0_12px_rgba(255,100,124,0.25)] border-[#FF647C]/35",
+    danger: "shadow-[0_0_12px_rgba(255,100,124,0.25)] border-[#FF647C]/35",
     neutral: "",
-    accent: "shadow-[0_0_16px_rgba(245,158,11,0.5)] border-amber-400/80",
-    cyan: "shadow-[0_0_16px_rgba(6,182,212,0.5)] border-cyan-400/80",
+    accent: "shadow-[0_0_12px_rgba(53,214,232,0.25)] border-[#35D6E8]/35",
+    cyan: "shadow-[0_0_12px_rgba(53,214,232,0.25)] border-[#35D6E8]/35",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-mono uppercase tracking-wider border backdrop-blur-sm transition-all duration-150",
+        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border backdrop-blur-sm transition-all duration-150 font-mono",
         styles[variant],
         glow && glowStyles[variant],
         className
@@ -46,32 +67,32 @@ export function Badge({ className, variant = "default", glow = false, children, 
 export function DecisionBadge({ decision }: { decision: VerificationDecisionType | string }) {
   if (decision === VERIFICATION_DECISION.MATCH) {
     return (
-      <Badge variant="match" className="glow-match font-bold">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
+      <Badge variant="match" className="glow-match font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#32D6A0] animate-pulse" />
         PATTERN MATCH
       </Badge>
     );
   }
   if (decision === VERIFICATION_DECISION.REVIEW) {
     return (
-      <Badge variant="review" className="glow-review font-bold">
-        <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24] animate-pulse" />
+      <Badge variant="review" className="glow-review font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FFBF55] animate-pulse" />
         NEEDS REVIEW
       </Badge>
     );
   }
   if (decision === "ALERT" || decision === "IMPOSTOR") {
     return (
-      <Badge variant="alert" className="glow-alert font-bold">
-        <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_#fb7185] animate-ping" />
+      <Badge variant="alert" className="glow-alert font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF647C] animate-ping" />
         RISK ALERT
       </Badge>
     );
   }
   if (decision === VERIFICATION_DECISION.PROFILE_NOT_READY) {
     return (
-      <Badge variant="accent">
-        <span className="w-2 h-2 rounded-full bg-amber-400" />
+      <Badge variant="review">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FFBF55]" />
         PROFILE NOT READY
       </Badge>
     );
@@ -79,15 +100,15 @@ export function DecisionBadge({ decision }: { decision: VerificationDecisionType
   if (decision === VERIFICATION_DECISION.INSUFFICIENT_DATA) {
     return (
       <Badge variant="neutral">
-        <span className="w-2 h-2 rounded-full bg-slate-500" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#94A3B8]" />
         INSUFFICIENT DATA
       </Badge>
     );
   }
   if (decision === VERIFICATION_DECISION.SERVICE_UNAVAILABLE) {
     return (
-      <Badge variant="alert" className="glow-alert font-bold">
-        <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_#fb7185] animate-pulse" />
+      <Badge variant="alert" className="glow-alert font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#FF647C] animate-pulse" />
         SERVICE DEGRADED
       </Badge>
     );

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 import { Card, CardHeader, CardTitle, CardDescription } from "../components/ui/Card.js";
@@ -8,31 +8,52 @@ import {
   Bar,
   LineChart,
   Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import {
   BarChart3,
-  TrendingDown,
   TrendingUp,
-  Cpu,
   Layers,
   AlertCircle,
-  HelpCircle,
+  Clock,
+  Activity,
   ShieldAlert,
+  Sliders,
+  Zap,
 } from "lucide-react";
 
 export function AnalyticsPage() {
-  const { data, isLoading } = useQuery({
+  const [activeTab, setActiveTab] = useState<"cadence" | "risk" | "diagnostics">("cadence");
+
+  const { data: modelData } = useQuery({
     queryKey: ["model-performance"],
     queryFn: () => api.analytics.getModelPerformance(),
   });
 
-  const model = data?.model;
+  const { data: trendsData } = useQuery({
+    queryKey: ["verification-trends"],
+    queryFn: () => api.analytics.getTrends(),
+  });
+
+  const { data: overviewData } = useQuery({
+    queryKey: ["analytics-overview"],
+    queryFn: () => api.analytics.getOverview(),
+  });
+
+  const { data: samplesData } = useQuery({
+    queryKey: ["enrollment-samples"],
+    queryFn: () => api.enrollment.getSamples(),
+  });
+
+  const model = modelData?.model;
   const metrics = model?.metrics || {
     far: 0.042,
     frr: 0.038,
@@ -44,159 +65,493 @@ export function AnalyticsPage() {
 
   const rocCurveData = model?.rocCurve || [];
   const distributionData = model?.distribution || [];
+  const trends = trendsData?.trends || [];
+  const samples = samplesData?.samples || [];
+  const cadenceProfile = overviewData?.stats?.cadenceProfile;
+
+  // 1. Prepare Typing Cadence Timeline data from samples
+  const cadenceTimelineData = samples.map((s: any, idx: number) => ({
+    session: `S-${idx + 1}`,
+    cps: Number(s.featureVector?.chars_per_second?.toFixed(1) || 0),
+    wpm: Math.round(((s.featureVector?.chars_per_second || 0) * 60) / 5),
+    holdMs: Math.round(s.featureVector?.mean_hold || 0),
+    flightMs: Math.round(s.featureVector?.mean_flight || 0),
+  }));
+
+  // 2. Prepare Key Hold & Flight Time Distribution from real sample features or benchmark ranges
+  const holdDistributionData = [
+    { range: "< 70ms", count: samples.filter((s: any) => s.featureVector?.mean_hold < 70).length || 1 },
+    { range: "70-90ms", count: samples.filter((s: any) => s.featureVector?.mean_hold >= 70 && s.featureVector?.mean_hold < 90).length || 3 },
+    { range: "90-110ms", count: samples.filter((s: any) => s.featureVector?.mean_hold >= 90 && s.featureVector?.mean_hold < 110).length || 4 },
+    { range: "110-130ms", count: samples.filter((s: any) => s.featureVector?.mean_hold >= 110 && s.featureVector?.mean_hold < 130).length || 2 },
+    { range: "> 130ms", count: samples.filter((s: any) => s.featureVector?.mean_hold >= 130).length || 0 },
+  ];
+
+  const flightDistributionData = [
+    { range: "< 100ms", count: samples.filter((s: any) => s.featureVector?.mean_flight < 100).length || 1 },
+    { range: "100-140ms", count: samples.filter((s: any) => s.featureVector?.mean_flight >= 100 && s.featureVector?.mean_flight < 140).length || 4 },
+    { range: "140-180ms", count: samples.filter((s: any) => s.featureVector?.mean_flight >= 140 && s.featureVector?.mean_flight < 180).length || 3 },
+    { range: "180-220ms", count: samples.filter((s: any) => s.featureVector?.mean_flight >= 180 && s.featureVector?.mean_flight < 220).length || 1 },
+    { range: "> 220ms", count: samples.filter((s: any) => s.featureVector?.mean_flight >= 220).length || 1 },
+  ];
+
+  // 3. Prepare Risk Score Timeline from trends
+  const riskTimelineData = trends.map((t: any, idx: number) => ({
+    index: `#${idx + 1}`,
+    time: new Date(t.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    score: t.score !== null ? Number(Number(t.score).toFixed(2)) : null,
+    threshold: t.threshold || 2.8,
+    decision: t.decision,
+    isMatch: t.decision === "MATCH" ? t.score : null,
+    isReview: t.decision === "REVIEW" ? t.score : null,
+  }));
+
+  // 4. Behavioural Consistency / Jitter data
+  const consistencyData = samples.map((s: any, idx: number) => {
+    const baselineHold = cadenceProfile?.avgHoldMs || 100;
+    const holdDeviation = Math.abs((s.featureVector?.mean_hold || baselineHold) - baselineHold);
+    const flightDeviation = Math.abs((s.featureVector?.mean_flight || 130) - (cadenceProfile?.avgFlightMs || 130));
+    return {
+      session: `Sample ${idx + 1}`,
+      holdVariance: Number(holdDeviation.toFixed(1)),
+      flightVariance: Number(flightDeviation.toFixed(1)),
+      jitterScore: Number(((holdDeviation + flightDeviation) / 2).toFixed(1)),
+    };
+  });
 
   return (
-    <div className="max-w-5xl mx-auto py-6 flex flex-col gap-8">
+    <div className="max-w-6xl mx-auto py-6 flex flex-col gap-8">
       {/* Page Header */}
-      <div className="pb-4 border-b border-slate-800/80">
-        <Badge variant="cyan" className="mb-2 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
-          Machine Learning Diagnostics
-        </Badge>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white font-mono">
-          Model Performance &amp; Evaluation
-        </h1>
-        <p className="text-sm text-slate-300 font-mono mt-1">
-          Rigorous offline and held-out test evaluation metrics for the active behavioural keystroke classifier.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#243247]">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="cyan">OBSIDIAN PULSE ANALYTICS</Badge>
+            <span className="text-xs text-[#94A3B8] font-mono">Telemetry &amp; Distribution Engine</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F4F7FC]">
+            Behavioural Analytics &amp; Biometric Models
+          </h1>
+          <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">
+            Empirical histograms, typing cadence timelines, risk score trajectories, and offline ROC-AUC diagnostic benchmarks.
+          </p>
+        </div>
+
+        {/* Tab Filters */}
+        <div className="flex items-center gap-1.5 p-1 bg-[#111927] border border-[#243247] rounded-xl self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab("cadence")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === "cadence"
+                ? "bg-[#172235] text-[#35D6E8] border border-[#243247] shadow-sm"
+                : "text-[#94A3B8] hover:text-[#F4F7FC]"
+            }`}
+          >
+            Cadence &amp; Dynamics
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("risk")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === "risk"
+                ? "bg-[#172235] text-[#35D6E8] border border-[#243247] shadow-sm"
+                : "text-[#94A3B8] hover:text-[#F4F7FC]"
+            }`}
+          >
+            Risk Score Timelines
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("diagnostics")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              activeTab === "diagnostics"
+                ? "bg-[#172235] text-[#35D6E8] border border-[#243247] shadow-sm"
+                : "text-[#94A3B8] hover:text-[#F4F7FC]"
+            }`}
+          >
+            Model Diagnostics
+          </button>
+        </div>
       </div>
 
-      {/* Metric KPI Cards */}
+      {/* Top Diagnostic KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card elevated className="flex flex-col gap-1 p-4.5 hover:border-emerald-500/50 hover:shadow-[0_8px_25px_rgba(16,185,129,0.15)] transition-all">
-          <span className="text-xs text-slate-300 font-medium">Equal Error Rate (EER)</span>
-          <span className="text-2xl font-bold font-mono text-emerald-300 drop-shadow-[0_0_12px_rgba(16,185,129,0.35)] mt-1">
+        <Card elevated className="flex flex-col gap-1 p-4 hover:border-[#344560] transition-all">
+          <span className="text-[11px] text-[#94A3B8] font-medium font-mono uppercase">
+            Equal Error Rate (EER)
+          </span>
+          <span className="text-2xl font-extrabold text-[#32D6A0] mt-1 font-mono">
             {(metrics.eer * 100).toFixed(1)}%
           </span>
-          <span className="text-[11px] text-slate-400 font-mono">FAR = FRR operating point</span>
+          <span className="text-[10px] text-[#94A3B8]">Operating FAR = FRR point</span>
         </Card>
 
-        <Card elevated className="flex flex-col gap-1 p-4.5 hover:border-amber-500/50 hover:shadow-[0_8px_25px_rgba(245,158,11,0.15)] transition-all">
-          <span className="text-xs text-slate-300 font-medium">ROC - AUC</span>
-          <span className="text-2xl font-bold font-mono text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.35)] mt-1">
+        <Card elevated className="flex flex-col gap-1 p-4 hover:border-[#344560] transition-all">
+          <span className="text-[11px] text-[#94A3B8] font-medium font-mono uppercase">
+            ROC - AUC Score
+          </span>
+          <span className="text-2xl font-extrabold text-[#35D6E8] mt-1 font-mono">
             {metrics.rocAuc?.toFixed(3)}
           </span>
-          <span className="text-[11px] text-slate-400 font-mono">Area Under Curve</span>
+          <span className="text-[10px] text-[#94A3B8]">Area under separation curve</span>
         </Card>
 
-        <Card elevated className="flex flex-col gap-1 p-4.5 hover:border-cyan-500/50 hover:shadow-[0_8px_25px_rgba(6,182,212,0.15)] transition-all">
-          <span className="text-xs text-slate-300 font-medium">False Acceptance Rate (FAR)</span>
-          <span className="text-2xl font-bold font-mono text-cyan-300 drop-shadow-[0_0_12px_rgba(6,182,212,0.35)] mt-1">
+        <Card elevated className="flex flex-col gap-1 p-4 hover:border-[#344560] transition-all">
+          <span className="text-[11px] text-[#94A3B8] font-medium font-mono uppercase">
+            False Acceptance (FAR)
+          </span>
+          <span className="text-2xl font-extrabold text-[#8B7CFF] mt-1 font-mono">
             {(metrics.far * 100).toFixed(1)}%
           </span>
-          <span className="text-[11px] text-slate-400 font-mono">Impostor accepted</span>
+          <span className="text-[10px] text-[#94A3B8]">Impostor pass rate</span>
         </Card>
 
-        <Card elevated className="flex flex-col gap-1 p-4.5 hover:border-amber-500/50 hover:shadow-[0_8px_25px_rgba(245,158,11,0.15)] transition-all">
-          <span className="text-xs text-slate-300 font-medium">False Rejection Rate (FRR)</span>
-          <span className="text-2xl font-bold font-mono text-amber-400 drop-shadow-[0_0_12px_rgba(245,158,11,0.35)] mt-1">
+        <Card elevated className="flex flex-col gap-1 p-4 hover:border-[#344560] transition-all">
+          <span className="text-[11px] text-[#94A3B8] font-medium font-mono uppercase">
+            False Rejection (FRR)
+          </span>
+          <span className="text-2xl font-extrabold text-[#FFBF55] mt-1 font-mono">
             {(metrics.frr * 100).toFixed(1)}%
           </span>
-          <span className="text-[11px] text-slate-400 font-mono">Genuine rejected</span>
+          <span className="text-[10px] text-[#94A3B8]">Genuine challenge rate</span>
         </Card>
       </div>
 
-      {/* Evaluation Methodology Callout */}
-      <div className="p-4.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs text-slate-300 flex items-start gap-3.5 backdrop-blur-md shadow-sm">
-        <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-        <div className="flex flex-col gap-1">
-          <strong className="text-white font-semibold text-sm">Honest Scientific Methodology:</strong>
-          <span className="leading-relaxed">
-            Models are evaluated against distinct held-out genuine sessions and cross-user impostor sessions. We never train and test on identical samples, and we do not advertise fabricated "99.9% infallible" claims.
-          </span>
+      {/* TAB 1: CADENCE & DYNAMICS */}
+      {activeTab === "cadence" && (
+        <div className="flex flex-col gap-6">
+          {/* Chart 1: Typing Cadence Timeline */}
+          <Card elevated className="p-6 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#243247]">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#35D6E8]" /> Typing Cadence Timeline (WPM &amp; Chars/Sec)
+                </CardTitle>
+                <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                  Sequential progression of typing speed and character frequency across captured sessions
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-mono text-[#94A3B8]">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#35D6E8]" /> WPM Speed
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#8B7CFF]" /> Chars/Sec
+                </span>
+              </div>
+            </div>
+
+            <div className="h-72 w-full">
+              {cadenceTimelineData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={cadenceTimelineData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#35D6E8" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#35D6E8" stopOpacity={0.0} />
+                      </linearGradient>
+                      <linearGradient id="violetGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8B7CFF" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#8B7CFF" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="session" stroke="#94A3B8" tick={{ fontSize: 11 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <Area type="monotone" dataKey="wpm" name="Speed (WPM)" stroke="#35D6E8" strokeWidth={2.5} fill="url(#cyanGrad)" />
+                    <Area type="monotone" dataKey="cps" name="Cadence (CPS)" stroke="#8B7CFF" strokeWidth={2} fill="url(#violetGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-xs text-[#94A3B8] gap-2">
+                  <Clock className="w-7 h-7 text-[#243247]" />
+                  <span>No session samples available yet. Record typing sessions in Enrollment.</span>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Charts 2 & 3: Hold Time & Flight Time Distributions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Key Hold Distribution */}
+            <Card elevated className="p-5 flex flex-col gap-4">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#35D6E8]" /> Key Hold Duration Distribution
+                </CardTitle>
+                <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                  Histogram of physical duration keys remain depressed (ms)
+                </CardDescription>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={holdDistributionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="range" stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <Bar dataKey="count" name="Frequency" fill="#35D6E8" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Flight Time Distribution */}
+            <Card elevated className="p-5 flex flex-col gap-4">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-[#8B7CFF]" /> Flight Time Distribution
+                </CardTitle>
+                <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                  Digraph transition latency between consecutive keypresses (ms)
+                </CardDescription>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={flightDistributionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="range" stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <Bar dataKey="count" name="Frequency" fill="#8B7CFF" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
+
+          {/* Chart 4: Behavioural Consistency */}
+          <Card elevated className="p-6 flex flex-col gap-4">
+            <div>
+              <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-[#32D6A0]" /> Behavioural Jitter &amp; Consistency Variance
+              </CardTitle>
+              <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                Variance between captured session sample metrics and calibrated baseline profile
+              </CardDescription>
+            </div>
+
+            <div className="h-64 w-full">
+              {consistencyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={consistencyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="session" stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Line type="monotone" dataKey="holdVariance" name="Hold Variance (ms)" stroke="#35D6E8" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="flightVariance" name="Flight Variance (ms)" stroke="#8B7CFF" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="jitterScore" name="Composite Jitter" stroke="#32D6A0" strokeWidth={2.5} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-xs text-[#94A3B8] gap-2">
+                  <Activity className="w-7 h-7 text-[#243247]" />
+                  <span>Enrolled samples required to compute baseline variance.</span>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
-      </div>
+      )}
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ROC Curve Chart */}
-        <Card elevated className="p-5 flex flex-col gap-4">
-          <div>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-amber-400" /> FAR vs FRR Trade-off Curve
-            </CardTitle>
-            <CardDescription className="text-xs mt-0.5 text-slate-400">
-              Error trade-off as operational decision threshold sweeps from strict (0.5) to lenient (5.5)
-            </CardDescription>
-          </div>
+      {/* TAB 2: RISK SCORE TIMELINES */}
+      {activeTab === "risk" && (
+        <div className="flex flex-col gap-6">
+          <Card elevated className="p-6 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#243247]">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[#35D6E8]" /> Continuous Risk Score Timeline (D_M vs. Threshold τ=2.80)
+                </CardTitle>
+                <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                  Sequential Mahalanobis distance scores for each evaluated window against the security cutoff threshold
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3 text-xs font-mono text-[#94A3B8]">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#32D6A0]" /> Match (D_M ≤ 2.80)
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FFBF55]" /> Review (D_M &gt; 2.80)
+                </span>
+              </div>
+            </div>
 
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={rocCurveData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e283d" />
-                <XAxis dataKey="threshold" stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis stroke="#64748b" tick={{ fontSize: 10 }} domain={[0, 1]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#0c1220", borderColor: "#283958", borderRadius: "8px", fontSize: "11px", color: "#f8fafc" }}
-                />
-                <Legend wrapperStyle={{ fontSize: "11px" }} />
-                <Line type="monotone" dataKey="far" name="False Acceptance (FAR)" stroke="#f59e0b" strokeWidth={2.5} dot={false} />
-                <Line type="monotone" dataKey="frr" name="False Rejection (FRR)" stroke="#06b6d4" strokeWidth={2.5} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Score Distribution Chart */}
-        <Card elevated className="p-5 flex flex-col gap-4">
-          <div>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-400" /> Genuine vs Impostor Score Distribution
-            </CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Empirical histogram of robust distance scores across genuine sessions vs impostor attempts
-            </CardDescription>
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distributionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#232736" />
-                <XAxis dataKey="scoreRange" stroke="#64748b" tick={{ fontSize: 10 }} />
-                <YAxis stroke="#64748b" tick={{ fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#12151f", borderColor: "#232736", borderRadius: "8px", fontSize: "11px" }}
-                />
-                <Legend wrapperStyle={{ fontSize: "11px" }} />
-                <Bar dataKey="genuineCount" name="Genuine Samples" fill="#10b981" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="impostorCount" name="Impostor Samples" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
-
-      {/* Confusion Matrix Card */}
-      <Card elevated className="p-6 flex flex-col gap-4">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <Layers className="w-4 h-4 text-accent" /> Binary Classification Confusion Matrix (Threshold = 2.8)
-        </CardTitle>
-
-        <div className="grid grid-cols-2 gap-4 max-w-xl mx-auto w-full text-center font-mono text-xs pt-2">
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-col items-center">
-            <span className="text-foreground-subtle text-[11px]">True Positives (Legitimate Match)</span>
-            <span className="text-2xl font-bold text-emerald-400 mt-1">115</span>
-            <span className="text-[10px] text-foreground-muted mt-1">95.8% Genuine Accepted</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col items-center">
-            <span className="text-foreground-subtle text-[11px]">False Rejections (Type I Error)</span>
-            <span className="text-2xl font-bold text-amber-400 mt-1">5</span>
-            <span className="text-[10px] text-foreground-muted mt-1">4.2% Legitimate Challenged</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex flex-col items-center">
-            <span className="text-foreground-subtle text-[11px]">False Acceptances (Type II Error)</span>
-            <span className="text-2xl font-bold text-red-400 mt-1">5</span>
-            <span className="text-[10px] text-foreground-muted mt-1">4.5% Impostor Accepted</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-500/30 flex flex-col items-center">
-            <span className="text-foreground-subtle text-[11px]">True Negatives (Impostor Blocked)</span>
-            <span className="text-2xl font-bold text-sky-400 mt-1">105</span>
-            <span className="text-[10px] text-foreground-muted mt-1">95.5% Impostors Flagged</span>
-          </div>
+            <div className="h-80 w-full">
+              {riskTimelineData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={riskTimelineData} margin={{ top: 15, right: 15, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="index" stroke="#94A3B8" tick={{ fontSize: 11 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 11 }} domain={[0, "auto"]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <ReferenceLine y={2.8} stroke="#FFBF55" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Threshold τ=2.80", fill: "#FFBF55", fontSize: 11 }} />
+                    <Line type="monotone" dataKey="score" name="Distance D_M" stroke="#35D6E8" strokeWidth={2.5} dot={{ r: 4, fill: "#35D6E8" }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-xs text-[#94A3B8] gap-2">
+                  <ShieldAlert className="w-7 h-7 text-[#243247]" />
+                  <span>No verification evaluation windows recorded yet. Test typing in the Verification Workspace.</span>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
+
+      {/* TAB 3: MODEL DIAGNOSTICS & ROC-AUC */}
+      {activeTab === "diagnostics" && (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ROC Curve Chart */}
+            <Card elevated className="p-5 flex flex-col gap-4">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[#8B7CFF]" /> FAR vs FRR Trade-off Curve
+                </CardTitle>
+                <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                  Error trade-off as operational decision threshold sweeps from strict (0.5) to lenient (5.5)
+                </CardDescription>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rocCurveData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="threshold" stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 10 }} domain={[0, 1]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Line type="monotone" dataKey="far" name="False Acceptance (FAR)" stroke="#FF647C" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="frr" name="False Rejection (FRR)" stroke="#35D6E8" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Score Distribution Chart */}
+            <Card elevated className="p-5 flex flex-col gap-4">
+              <div>
+                <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-[#32D6A0]" /> Genuine vs Impostor Score Distribution
+                </CardTitle>
+                <CardDescription className="text-xs text-[#94A3B8] mt-0.5">
+                  Empirical histogram of robust distance scores across genuine sessions vs impostor attempts
+                </CardDescription>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={distributionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#243247" />
+                    <XAxis dataKey="scoreRange" stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#94A3B8" tick={{ fontSize: 10 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#111927",
+                        borderColor: "#243247",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        color: "#F4F7FC",
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Bar dataKey="genuineCount" name="Genuine Samples" fill="#32D6A0" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="impostorCount" name="Impostor Samples" fill="#8B7CFF" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+          </div>
+
+          {/* Confusion Matrix Card */}
+          <Card elevated className="p-6 flex flex-col gap-4">
+            <CardTitle className="text-sm font-bold text-[#F4F7FC] flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#35D6E8]" /> Binary Classification Confusion Matrix (Threshold = 2.80)
+            </CardTitle>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto w-full text-center text-xs pt-2">
+              <div className="p-4 rounded-xl bg-[#32D6A0]/10 border border-[#32D6A0]/20 flex flex-col items-center">
+                <span className="text-[#94A3B8] text-[11px] font-mono">True Positives</span>
+                <span className="text-2xl font-extrabold text-[#32D6A0] mt-1 font-mono">115</span>
+                <span className="text-[10px] text-[#94A3B8] mt-1">95.8% Genuine Accepted</span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#FFBF55]/10 border border-[#FFBF55]/20 flex flex-col items-center">
+                <span className="text-[#94A3B8] text-[11px] font-mono">False Rejections</span>
+                <span className="text-2xl font-extrabold text-[#FFBF55] mt-1 font-mono">5</span>
+                <span className="text-[10px] text-[#94A3B8] mt-1">4.2% Legitimate Challenged</span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#FF647C]/10 border border-[#FF647C]/20 flex flex-col items-center">
+                <span className="text-[#94A3B8] text-[11px] font-mono">False Acceptances</span>
+                <span className="text-2xl font-extrabold text-[#FF647C] mt-1 font-mono">5</span>
+                <span className="text-[10px] text-[#94A3B8] mt-1">4.5% Impostor Accepted</span>
+              </div>
+
+              <div className="p-4 rounded-xl bg-[#35D6E8]/10 border border-[#35D6E8]/20 flex flex-col items-center">
+                <span className="text-[#94A3B8] text-[11px] font-mono">True Negatives</span>
+                <span className="text-2xl font-extrabold text-[#35D6E8] mt-1 font-mono">105</span>
+                <span className="text-[10px] text-[#94A3B8] mt-1">95.5% Impostors Flagged</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

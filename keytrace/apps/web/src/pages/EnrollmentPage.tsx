@@ -13,15 +13,11 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
-  Sparkles,
   ArrowRight,
   Cpu,
-  HardDrive,
-  Check,
   Save,
 } from "lucide-react";
-import { KeystrokeSessionPayload, ENROLLMENT_THRESHOLDS, PROFILE_STATUS } from "@keytrace/shared";
+import { KeystrokeSessionPayload, ENROLLMENT_THRESHOLDS } from "@keytrace/shared";
 
 const ENROLLMENT_PROMPTS = [
   "The quick brown fox jumps over the lazy dog to record behavioral dynamics.",
@@ -44,7 +40,7 @@ export function EnrollmentPage() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Queries
-  const { data: statusData, isLoading: isStatusLoading } = useQuery({
+  const { data: statusData } = useQuery({
     queryKey: ["enrollment-status"],
     queryFn: () => api.enrollment.getStatus(),
   });
@@ -62,7 +58,6 @@ export function EnrollmentPage() {
       queryClient.invalidateQueries({ queryKey: ["enrollment-samples"] });
       refreshUser();
       setFeedback({ type: "success", message: data.message || "Sample recorded successfully." });
-      // Advance to next prompt
       setPromptIndex((prev) => (prev + 1) % ENROLLMENT_PROMPTS.length);
       setTimeout(() => setFeedback(null), 4000);
     },
@@ -83,16 +78,6 @@ export function EnrollmentPage() {
     },
   });
 
-  // Finalize mutation
-  const finalizeMutation = useMutation({
-    mutationFn: () => api.enrollment.finalize(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["enrollment-status"] });
-      refreshUser();
-      setFeedback({ type: "success", message: "Profile finalized and ready for verification!" });
-    },
-  });
-
   // Build & Save Model mutation
   const buildModelMutation = useMutation({
     mutationFn: () => api.enrollment.buildModel(),
@@ -101,12 +86,12 @@ export function EnrollmentPage() {
       refreshUser();
       setFeedback({
         type: "success",
-        message: data.message || "Model built completely and saved to disk. Zero-retraining verification active!",
+        message: data.message || "Model built and cached successfully.",
       });
       setTimeout(() => setFeedback(null), 5000);
     },
     onError: (err: any) => {
-      setFeedback({ type: "error", message: err.message || "Failed to build and save model." });
+      setFeedback({ type: "error", message: err.message || "Failed to build model." });
     },
   });
 
@@ -118,14 +103,16 @@ export function EnrollmentPage() {
   if (!user?.hasConsent) {
     return (
       <div className="max-w-xl mx-auto py-16 text-center flex flex-col items-center gap-4">
-        <AlertCircle className="w-12 h-12 text-amber-400" />
-        <h2 className="text-2xl font-bold text-foreground">Informed Consent Required</h2>
-        <p className="text-sm text-foreground-muted">
+        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+          <AlertCircle className="w-6 h-6" />
+        </div>
+        <h2 className="text-2xl font-bold text-white">Informed Consent Required</h2>
+        <p className="text-sm text-zinc-400 max-w-md">
           Under our privacy-by-design policy, keystroke timing collection requires your explicit agreement before recording any sessions.
         </p>
         <Link to="/consent" className="mt-2">
           <Button variant="primary" size="md">
-            Review &amp; Accept Consent Terms
+            Review Consent Terms
           </Button>
         </Link>
       </div>
@@ -135,23 +122,23 @@ export function EnrollmentPage() {
   return (
     <div className="max-w-4xl mx-auto py-6 flex flex-col gap-8">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="cyan" glow>Enrolment Console</Badge>
+            <Badge variant="cyan">Enrollment Console</Badge>
             {isEnrolled ? (
-              <Badge variant="match" glow>Profile Complete ({sampleCount} samples)</Badge>
+              <Badge variant="match">Profile Complete ({sampleCount} samples)</Badge>
             ) : (
-              <Badge variant="review" glow>
+              <Badge variant="review">
                 {sampleCount} / {ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} Samples
               </Badge>
             )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-300 to-cyan-300">
-            Behavioural Profile Enrolment
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            Behavioral Profile Enrollment
           </h1>
-          <p className="text-sm text-foreground-muted mt-1">
-            Record at least 10 sessions typing at your normal rhythm to construct a high-entropy biometric baseline.
+          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+            Record at least 10 sessions typing at your normal rhythm to construct a reliable biometric baseline.
           </p>
         </div>
 
@@ -167,39 +154,38 @@ export function EnrollmentPage() {
       {/* Feedback Alert */}
       {feedback && (
         <div
-          className={`p-4 rounded-xl border flex items-center gap-3 text-xs animate-fadeIn backdrop-blur-md shadow-lg ${
+          className={`p-4 rounded-xl border flex items-center gap-3 text-xs animate-fadeIn backdrop-blur-md shadow-sm ${
             feedback.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-emerald-500/10"
-              : "bg-red-500/10 border-red-500/40 text-red-300 shadow-red-500/10"
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-300"
           }`}
         >
           {feedback.type === "success" ? (
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
           ) : (
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
           )}
           <span className="font-medium">{feedback.message}</span>
         </div>
       )}
 
       {/* Progress Card */}
-      <Card elevated className="p-5 flex flex-col gap-3.5 border-border/70 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/40 via-cyan-500/40 to-emerald-500/40" />
+      <Card elevated className="p-5 flex flex-col gap-3.5">
         <div className="flex items-center justify-between text-xs font-medium">
-          <span className="text-foreground-muted flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+          <span className="text-zinc-400 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
             Overall Baseline Progress
           </span>
-          <span className="font-mono text-cyan-300 font-bold tracking-wider">
+          <span className="font-mono text-zinc-200">
             {sampleCount} of {ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} required samples ({progressPercent}%)
           </span>
         </div>
-        <div className="w-full h-3 bg-slate-900/90 rounded-full overflow-hidden border border-border-subtle p-0.5">
+        <div className="w-full h-2 bg-zinc-950 rounded-full border border-white/5 overflow-hidden">
           <div
             className={`h-full transition-all duration-500 rounded-full ${
               isEnrolled
-                ? "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_12px_rgba(16,185,129,0.7)]"
-                : "bg-gradient-to-r from-amber-500 via-orange-400 to-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.6)]"
+                ? "bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                : "bg-indigo-500"
             }`}
             style={{ width: `${progressPercent}%` }}
           />
@@ -207,30 +193,29 @@ export function EnrollmentPage() {
       </Card>
 
       {/* Biometric Model Serialization Card */}
-      <Card elevated className="p-5 flex flex-col gap-4 border-cyan-500/30 bg-surface/90 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 via-amber-400 to-emerald-400" />
+      <Card elevated className="p-5 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
-              <Cpu className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-white/10 flex items-center justify-center text-zinc-300">
+              <Cpu className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-foreground">
+                <h3 className="text-sm font-semibold text-white">
                   Personal Biometric Model Pipeline
                 </h3>
                 {isModelBuilt ? (
-                  <Badge variant="match" glow>SAVED MODEL ARTIFACT ACTIVE</Badge>
+                  <Badge variant="match">Model Active</Badge>
                 ) : sampleCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED ? (
-                  <Badge variant="review" glow>READY TO BUILD &amp; SAVE</Badge>
+                  <Badge variant="review">Ready to Compile</Badge>
                 ) : (
-                  <Badge variant="neutral">BUILD PENDING SAMPLES</Badge>
+                  <Badge variant="neutral">Pending Samples</Badge>
                 )}
               </div>
-              <p className="text-xs text-foreground-muted mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 {isModelBuilt
                   ? "Trained model artifact (.joblib) is persisted to disk and cached in memory for zero-retraining inference."
-                  : "Collect at least 10 baseline samples to compile and save your biometric model artifact completely."}
+                  : "Collect at least 10 baseline samples to compile and save your biometric model."}
               </p>
             </div>
           </div>
@@ -242,9 +227,9 @@ export function EnrollmentPage() {
                 size="sm"
                 onClick={() => buildModelMutation.mutate()}
                 isLoading={buildModelMutation.isPending}
-                className="text-xs text-cyan-300 border-cyan-500/40 hover:bg-cyan-500/10"
+                className="text-xs"
               >
-                <Save className="w-3.5 h-3.5 mr-1.5" /> Re-build &amp; Overwrite Model
+                <Save className="w-3.5 h-3.5 mr-1" /> Re-compile Model
               </Button>
             ) : (
               <Button
@@ -255,7 +240,7 @@ export function EnrollmentPage() {
                 isLoading={buildModelMutation.isPending}
                 className="text-xs"
               >
-                <Cpu className="w-3.5 h-3.5 mr-1.5" /> Build &amp; Save Model Completely
+                <Cpu className="w-3.5 h-3.5 mr-1 text-zinc-950" /> Compile Model
               </Button>
             )}
           </div>
@@ -263,24 +248,24 @@ export function EnrollmentPage() {
 
         {/* Model Telemetry Chips */}
         {isModelBuilt && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-border/60 text-xs font-mono">
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
-              <span className="text-[10px] text-foreground-subtle uppercase">Artifact Engine</span>
-              <span className="text-xs font-bold text-cyan-300">Joblib Compressed</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-white/[0.06] text-xs font-mono">
+            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-white/[0.06] flex flex-col gap-0.5">
+              <span className="text-[10px] text-zinc-500 uppercase">Artifact</span>
+              <span className="text-xs font-semibold text-zinc-200">Joblib Binary</span>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
-              <span className="text-[10px] text-foreground-subtle uppercase">Inference Mode</span>
-              <span className="text-xs font-bold text-emerald-400">Zero Retraining (Cached)</span>
+            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-white/[0.06] flex flex-col gap-0.5">
+              <span className="text-[10px] text-zinc-500 uppercase">Inference Mode</span>
+              <span className="text-xs font-semibold text-emerald-400">Zero Retraining</span>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
-              <span className="text-[10px] text-foreground-subtle uppercase">Stability Score</span>
-              <span className="text-xs font-bold text-amber-400">
+            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-white/[0.06] flex flex-col gap-0.5">
+              <span className="text-[10px] text-zinc-500 uppercase">Stability</span>
+              <span className="text-xs font-semibold text-amber-400">
                 {statusData?.stabilityScore ? `${statusData.stabilityScore}% index` : "Calibrated"}
               </span>
             </div>
-            <div className="p-2.5 rounded-lg bg-slate-900/60 border border-border-subtle flex flex-col gap-0.5">
-              <span className="text-[10px] text-foreground-subtle uppercase">Calibrated Threshold</span>
-              <span className="text-xs font-bold text-foreground">
+            <div className="p-2.5 rounded-xl bg-zinc-950/60 border border-white/[0.06] flex flex-col gap-0.5">
+              <span className="text-[10px] text-zinc-500 uppercase">Threshold</span>
+              <span className="text-xs font-semibold text-zinc-200">
                 τ = {statusData?.calibratedThreshold ? statusData.calibratedThreshold.toFixed(2) : "2.80"}
               </span>
             </div>
@@ -289,15 +274,13 @@ export function EnrollmentPage() {
       </Card>
 
       {/* Typing Capture Component */}
-      <Card elevated className="p-6 sm:p-8 flex flex-col gap-6 border-cyan-500/20 relative overflow-hidden">
-        <div className="absolute -top-16 -right-16 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="flex items-center justify-between">
+      <Card elevated className="p-6 sm:p-8 flex flex-col gap-6">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-400 font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              Session Sample #{sampleCount + 1}
+            <span className="text-xs font-medium text-indigo-400">
+              Sample #{sampleCount + 1}
             </span>
-            <h3 className="text-lg font-bold text-foreground mt-0.5">
+            <h3 className="text-base font-semibold text-white mt-0.5">
               Type the prompt at your natural cadence
             </h3>
           </div>
@@ -305,7 +288,7 @@ export function EnrollmentPage() {
             variant="ghost"
             size="sm"
             onClick={() => setPromptIndex((prev) => (prev + 1) % ENROLLMENT_PROMPTS.length)}
-            className="text-xs text-foreground-muted hover:text-cyan-400"
+            className="text-xs text-zinc-400 hover:text-white"
           >
             Change Prompt
           </Button>
@@ -322,48 +305,48 @@ export function EnrollmentPage() {
       </Card>
 
       {/* Enrolled Samples Table */}
-      <Card elevated className="p-6 flex flex-col gap-4 border-border/80">
-        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+      <Card elevated className="p-6 flex flex-col gap-4">
+        <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <UserCheck className="w-4 h-4 text-cyan-400" /> Enrolled Timing Samples ({samplesData?.samples?.length || 0})
+            <UserCheck className="w-4 h-4 text-indigo-400" /> Enrolled Timing Samples ({samplesData?.samples?.length || 0})
           </CardTitle>
-          <span className="text-xs text-foreground-subtle hidden sm:inline">
+          <span className="text-xs text-zinc-500 hidden sm:inline">
             Numeric feature vectors stored securely without raw text
           </span>
         </div>
 
         {isSamplesLoading ? (
-          <div className="py-8 text-center text-xs text-foreground-subtle">Loading samples...</div>
+          <div className="py-8 text-center text-xs text-zinc-500">Loading samples...</div>
         ) : samplesData?.samples && samplesData.samples.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead>
-                <tr className="border-b border-border text-foreground-muted font-mono uppercase tracking-wider text-[11px]">
-                  <th className="py-2.5 px-3 font-semibold">Recorded</th>
-                  <th className="py-2.5 px-3 font-semibold">Mean Hold</th>
-                  <th className="py-2.5 px-3 font-semibold">Mean Flight</th>
-                  <th className="py-2.5 px-3 font-semibold">Typing Speed</th>
-                  <th className="py-2.5 px-3 font-semibold">Quality</th>
-                  <th className="py-2.5 px-3 font-semibold text-right">Action</th>
+                <tr className="border-b border-white/[0.06] text-zinc-500 font-mono text-[11px]">
+                  <th className="py-2.5 px-3 font-medium">Recorded</th>
+                  <th className="py-2.5 px-3 font-medium">Mean Hold</th>
+                  <th className="py-2.5 px-3 font-medium">Mean Flight</th>
+                  <th className="py-2.5 px-3 font-medium">Cadence</th>
+                  <th className="py-2.5 px-3 font-medium">Quality</th>
+                  <th className="py-2.5 px-3 font-medium text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border-subtle/50 font-mono">
+              <tbody className="divide-y divide-white/[0.04] font-mono">
                 {samplesData.samples.map((s: any, idx: number) => (
-                  <tr key={s.id} className="hover:bg-cyan-500/5 transition-colors">
-                    <td className="py-3 px-3 text-foreground-muted">
-                      #{samplesData.samples.length - idx} &bull; {new Date(s.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  <tr key={s.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 px-3 text-zinc-400">
+                      #{samplesData.samples.length - idx} • {new Date(s.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </td>
-                    <td className="py-3 px-3 text-amber-400 font-semibold">
+                    <td className="py-3 px-3 text-zinc-200">
                       {s.featureVector?.mean_hold} ms
                     </td>
-                    <td className="py-3 px-3 text-cyan-400 font-semibold">
+                    <td className="py-3 px-3 text-zinc-200">
                       {s.featureVector?.mean_flight} ms
                     </td>
-                    <td className="py-3 px-3 text-foreground">
-                      {s.featureVector?.chars_per_second} chars/s
+                    <td className="py-3 px-3 text-zinc-200">
+                      {s.featureVector?.chars_per_second} c/s
                     </td>
                     <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {s.qualityStatus}
                       </span>
                     </td>
@@ -371,7 +354,7 @@ export function EnrollmentPage() {
                       <button
                         onClick={() => deleteMutation.mutate(s.id)}
                         disabled={deleteMutation.isPending}
-                        className="text-zinc-500 hover:text-red-400 p-1 rounded transition-colors"
+                        className="text-zinc-500 hover:text-rose-400 p-1 rounded transition-colors cursor-pointer"
                         title="Delete sample"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -383,8 +366,8 @@ export function EnrollmentPage() {
             </table>
           </div>
         ) : (
-          <div className="py-8 text-center text-xs text-foreground-muted">
-            No enrolment samples recorded yet. Type the prompt above to add your first sample.
+          <div className="py-8 text-center text-xs text-zinc-500">
+            No enrollment samples recorded yet. Type the prompt above to add your first sample.
           </div>
         )}
       </Card>

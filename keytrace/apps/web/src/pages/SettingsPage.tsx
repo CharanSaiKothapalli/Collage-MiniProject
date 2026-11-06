@@ -7,7 +7,6 @@ import { Input } from "../components/ui/Input.js";
 import { Button } from "../components/ui/Button.js";
 import { Badge } from "../components/ui/Badge.js";
 import {
-  Settings,
   Lock,
   Download,
   Trash2,
@@ -119,54 +118,53 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 flex flex-col gap-8">
-      <div>
-        <Badge variant="cyan" glow className="mb-1.5">
+      <div className="pb-5 border-b border-white/[0.08]">
+        <Badge variant="cyan" className="mb-2">
           User Settings
         </Badge>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-orange-300 to-cyan-300">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
           Account &amp; Data Management
         </h1>
-        <p className="text-sm text-foreground-muted mt-1">
+        <p className="text-xs sm:text-sm text-zinc-400 mt-1">
           Manage your credentials, exercise your privacy rights, and export or delete biometric data.
         </p>
       </div>
 
       {dataMsg && (
         <div
-          className={`p-4 rounded-xl border flex items-center gap-3 text-xs backdrop-blur-md shadow-lg ${
+          className={`p-4 rounded-xl border flex items-center gap-3 text-xs backdrop-blur-md shadow-sm ${
             dataMsg.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300 shadow-emerald-500/10"
-              : "bg-red-500/10 border-red-500/40 text-red-300 shadow-red-500/10"
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-300"
           }`}
         >
           {dataMsg.type === "success" ? (
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
           ) : (
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
           )}
           <span className="font-medium">{dataMsg.text}</span>
         </div>
       )}
 
       {/* Profile Overview */}
-      <Card elevated className="p-6 flex flex-col gap-4 border-border/80 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500/40 via-amber-500/40 to-emerald-500/40" />
+      <Card elevated className="p-6 flex flex-col gap-4">
         <CardTitle className="text-base flex items-center gap-2">
-          <User className="w-4 h-4 text-cyan-400" /> Account Identity
+          <User className="w-4 h-4 text-indigo-400" /> Account Identity
         </CardTitle>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
-          <div className="p-3.5 rounded-lg bg-surface/80 border border-border/70 hover:border-cyan-500/30 transition-colors">
-            <span className="text-foreground-muted block text-[11px] uppercase tracking-wider">Username</span>
-            <span className="text-sm font-bold text-cyan-300 mt-1 block font-mono">{user?.username}</span>
+          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-white/[0.06]">
+            <span className="text-zinc-500 block text-[11px] font-sans">Username</span>
+            <span className="text-sm font-semibold text-zinc-100 mt-1 block font-mono">{user?.username}</span>
           </div>
-          <div className="p-3.5 rounded-lg bg-surface/80 border border-border/70 hover:border-cyan-500/30 transition-colors">
-            <span className="text-foreground-muted block text-[11px] uppercase tracking-wider">Email Address</span>
-            <span className="text-sm font-bold text-foreground mt-1 block truncate font-mono">{user?.email}</span>
+          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-white/[0.06]">
+            <span className="text-zinc-500 block text-[11px] font-sans">Email Address</span>
+            <span className="text-sm font-semibold text-zinc-100 mt-1 block truncate font-mono">{user?.email}</span>
           </div>
-          <div className="p-3.5 rounded-lg bg-surface/80 border border-border/70 hover:border-amber-500/30 transition-colors">
-            <span className="text-foreground-muted block text-[11px] uppercase tracking-wider">System Role</span>
-            <span className="text-sm font-bold text-amber-400 mt-1 block uppercase font-mono">{user?.role}</span>
+          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-white/[0.06]">
+            <span className="text-zinc-500 block text-[11px] font-sans">System Role</span>
+            <span className="text-sm font-semibold text-amber-400 mt-1 block uppercase font-mono">{user?.role}</span>
           </div>
         </div>
       </Card>
@@ -174,15 +172,15 @@ export function SettingsPage() {
       {/* Change Password Card */}
       <Card elevated className="p-6 flex flex-col gap-5">
         <CardTitle className="text-base flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-accent" /> Change Password
+          <KeyRound className="w-4 h-4 text-indigo-400" /> Change Password
         </CardTitle>
 
         {passwordMsg && (
           <div
-            className={`p-3 rounded-lg border flex items-center gap-2 text-xs ${
+            className={`p-3 rounded-xl border flex items-center gap-2 text-xs ${
               passwordMsg.type === "success"
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                : "bg-red-500/10 border-red-500/30 text-red-400"
+                : "bg-rose-500/10 border-rose-500/30 text-rose-400"
             }`}
           >
             <span>{passwordMsg.text}</span>
@@ -221,9 +219,9 @@ export function SettingsPage() {
       </Card>
 
       {/* Privacy & Data Controls Card */}
-      <Card elevated className="p-6 flex flex-col gap-5 border-border/80">
+      <Card elevated className="p-6 flex flex-col gap-5">
         <CardTitle className="text-base flex items-center gap-2">
-          <Download className="w-4 h-4 text-cyan-400" /> Export Personal Telemetry (GDPR Art. 20)
+          <Download className="w-4 h-4 text-indigo-400" /> Export Personal Telemetry (GDPR Art. 20)
         </CardTitle>
         <CardDescription className="text-xs">
           Download a machine-readable JSON archive of your account metadata, consent records, enrolled timing feature vectors, and verification history.
@@ -242,37 +240,37 @@ export function SettingsPage() {
       </Card>
 
       {/* Danger Zone Card */}
-      <Card elevated className="p-6 flex flex-col gap-5 border-red-500/40 bg-red-950/20 shadow-[0_0_20px_rgba(239,68,68,0.08)]">
-        <div className="flex items-center gap-2 text-red-400">
-          <ShieldAlert className="w-5 h-5 text-red-400 animate-pulse" />
-          <h3 className="text-base font-bold text-foreground">Danger Zone</h3>
+      <Card elevated className="p-6 flex flex-col gap-5 border-rose-500/20 bg-rose-500/5">
+        <div className="flex items-center gap-2 text-rose-400">
+          <ShieldAlert className="w-5 h-5" />
+          <h3 className="text-base font-semibold">Danger Zone</h3>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-red-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-rose-500/20">
           <div>
-            <span className="text-sm font-semibold text-foreground block">
+            <span className="text-sm font-semibold text-white block">
               Delete Behavioral Profile
             </span>
-            <span className="text-xs text-foreground-muted">
+            <span className="text-xs text-zinc-400">
               Purges all 10 enrolled timing samples while keeping your login credentials.
             </span>
           </div>
           <Button variant="danger" size="sm" onClick={handleDeleteProfile}>
-            <Trash2 className="w-3.5 h-3.5" /> Purge Profile
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Purge Profile
           </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-red-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-rose-500/20">
           <div>
-            <span className="text-sm font-semibold text-foreground block">
+            <span className="text-sm font-semibold text-white block">
               Permanently Delete Account
             </span>
-            <span className="text-xs text-foreground-muted">
+            <span className="text-xs text-zinc-400">
               Completely erases your user account, consent records, and authentication audit logs.
             </span>
           </div>
           <Button variant="danger" size="sm" onClick={handleDeleteAccount}>
-            <Trash2 className="w-3.5 h-3.5" /> Erase Account
+            <Trash2 className="w-3.5 h-3.5 mr-1" /> Erase Account
           </Button>
         </div>
       </Card>

@@ -11,28 +11,28 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading = false, children, disabled, ...props }, ref) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-md tracking-wide transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 disabled:opacity-40 disabled:pointer-events-none hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer";
+      "inline-flex items-center justify-center font-medium rounded-xl tracking-tight transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-40 disabled:pointer-events-none active:scale-[0.98] select-none cursor-pointer";
 
     const sizeStyles = {
-      xs: "px-2.5 py-1 text-[11px] gap-1 font-mono uppercase",
-      sm: "px-3.5 py-1.5 text-xs gap-1.5 font-mono uppercase tracking-wider",
-      md: "px-5 py-2.5 text-sm gap-2 font-medium",
-      lg: "px-6 py-3 text-base gap-2.5 font-semibold",
+      xs: "px-2.5 py-1 text-xs gap-1 font-medium",
+      sm: "px-3.5 py-1.5 text-xs gap-1.5 font-medium",
+      md: "px-4.5 py-2 text-sm gap-2 font-medium",
+      lg: "px-5.5 py-2.5 text-sm gap-2.5 font-semibold",
     };
 
     const variantStyles = {
       primary:
-        "sheen-hover bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:via-orange-400 hover:to-amber-500 text-slate-950 font-bold border border-amber-300/60 shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.65)]",
+        "bg-white text-zinc-950 font-semibold hover:bg-zinc-200 border border-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.2),inset_0_1px_0_0_rgba(255,255,255,1)]",
       secondary:
-        "bg-slate-900/90 hover:bg-slate-800/95 text-slate-100 border border-slate-700/80 hover:border-cyan-500/50 hover:text-cyan-300 shadow-sm backdrop-blur-md hover:shadow-[0_0_15px_rgba(6,182,212,0.15)]",
+        "bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 hover:border-white/20 shadow-sm backdrop-blur-md shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]",
       outline:
-        "bg-transparent hover:bg-cyan-950/40 text-slate-200 border border-slate-700/80 hover:border-cyan-400 hover:text-cyan-300 shadow-sm hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all",
+        "bg-transparent hover:bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700 shadow-sm transition-all",
       danger:
-        "bg-rose-950/50 hover:bg-rose-900/70 text-rose-300 border border-rose-500/60 hover:border-rose-400 shadow-[0_0_18px_rgba(244,63,94,0.3)] hover:shadow-[0_0_25px_rgba(244,63,94,0.5)]",
+        "bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:border-rose-500/40 shadow-sm",
       ghost:
-        "bg-transparent hover:bg-slate-800/60 text-slate-300 hover:text-white border border-transparent",
+        "bg-transparent hover:bg-zinc-800/60 text-zinc-400 hover:text-white border border-transparent",
       terminal:
-        "sheen-hover bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 font-mono text-xs border border-cyan-500/60 hover:border-cyan-400 shadow-[0_0_18px_rgba(6,182,212,0.3)] hover:shadow-[0_0_28px_rgba(6,182,212,0.5)]",
+        "bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 font-mono text-xs border border-zinc-800 hover:border-zinc-700 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]",
     };
 
     return (
