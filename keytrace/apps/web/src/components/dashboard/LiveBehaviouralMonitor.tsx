@@ -10,8 +10,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Sparkles,
-  ChevronDown,
-  ChevronUp,
+  Lock,
 } from "lucide-react";
 import { api } from "../../lib/api.js";
 import { KeystrokeSessionPayload } from "@keytrace/shared";
@@ -51,8 +50,9 @@ export function LiveBehaviouralMonitor({
   const [backendScore, setBackendScore] = useState<number | null>(null);
   const [backendThreshold, setBackendThreshold] = useState<number | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [waveformWave, setWaveformWave] = useState<number[]>(Array(20).fill(10));
+  const [waveformWave, setWaveformWave] = useState<number[]>(
+    Array(24).fill(12)
+  );
 
   // Active session tracking for continuous live evaluation
   const sessionIdRef = useRef<string | null>(null);
@@ -61,19 +61,19 @@ export function LiveBehaviouralMonitor({
   const sessionStartTime = useRef<number | null>(null);
   const eventsRef = useRef<KeystrokeEvent[]>([]);
 
-  // Smooth waveform animation loop
+  // Waveform animation loop
   useEffect(() => {
     let animId: number;
     let t = 0;
     const animate = () => {
       t += 0.08;
       const isTyping = eventsRef.current.length > 0;
-      const baseAmp = isTyping ? 16 : 5;
+      const baseAmp = isTyping ? 18 : 6;
       setWaveformWave((prev) =>
         prev.map((_, i) => {
           const wave1 = Math.sin(t + i * 0.35) * baseAmp;
-          const wave2 = Math.cos(t * 0.7 + i * 0.2) * (baseAmp * 0.5);
-          return Math.max(3, Math.min(32, 16 + wave1 + wave2));
+          const wave2 = Math.cos(t * 0.7 + i * 0.2) * (baseAmp * 0.6);
+          return Math.max(4, Math.min(36, 18 + wave1 + wave2));
         })
       );
       animId = requestAnimationFrame(animate);
@@ -140,7 +140,7 @@ export function LiveBehaviouralMonitor({
       eventsRef.current.push(ev);
       setEvents([...eventsRef.current]);
 
-      // If user is enrolled and we reached evaluation window (>= 25 keys), trigger real verification evaluation
+      // If user is enrolled and we reached evaluation window (>= 20 keys), trigger real verification evaluation
       if (isEnrolled && eventsRef.current.length >= 25 && !isVerifying) {
         triggerBackendWindowEvaluation();
       }
@@ -153,6 +153,7 @@ export function LiveBehaviouralMonitor({
       setIsVerifying(true);
       setAuthStatus("EVALUATING");
 
+      // Initialize session if not open yet
       if (!sessionIdRef.current) {
         const sessionRes = await api.verification.startSession({
           userAgent: navigator.userAgent,
@@ -191,7 +192,8 @@ export function LiveBehaviouralMonitor({
       } else {
         setAuthStatus("INSUFFICIENT");
       }
-    } catch {
+    } catch (err) {
+      // Keep running gracefully without crashing UI
       setAuthStatus("CAPTURING");
     } finally {
       setIsVerifying(false);
@@ -223,6 +225,7 @@ export function LiveBehaviouralMonitor({
     const kps = Number((events.length / elapsedSec).toFixed(1));
     const cadenceWpm = Math.round((events.length / 5) / (elapsedSec / 60));
 
+    // Calculate real behavioural deviation against user's baseline
     let deviation: number | null = null;
     let confidencePercent: number | null = null;
 
@@ -236,10 +239,12 @@ export function LiveBehaviouralMonitor({
       const compositeDelta = (holdDiffRatio + flightDiffRatio) / 2;
       deviation = Number((compositeDelta * 2.8).toFixed(2));
 
-      confidencePercent = Math.max(
+      // Confidence inversely mapped to deviation
+      const calculatedConf = Math.max(
         10,
         Math.min(99, Math.round(100 - compositeDelta * 45))
       );
+      confidencePercent = calculatedConf;
     } else if (backendScore !== null && backendThreshold !== null) {
       deviation = Number(backendScore.toFixed(2));
       const ratio = backendScore / backendThreshold;
@@ -264,20 +269,34 @@ export function LiveBehaviouralMonitor({
   return (
     <div
       id="live-monitor"
-      className="rounded-2xl bg-[#111927] border border-[#243247] p-5 sm:p-6 shadow-xl relative overflow-hidden transition-all scroll-mt-20"
+      className="rounded-2xl bg-[#111927] border border-[#243247] p-6 lg:p-7 shadow-2xl relative overflow-hidden transition-all scroll-mt-20"
     >
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#243247]">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#35D6E8] shrink-0">
-            <Zap className="w-4 h-4" />
+      {/* Top Specular Line */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#35D6E8]/30 to-transparent pointer-events-none" />
+
+      {/* Monitor Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#243247]">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#35D6E8] shrink-0">
+            <Zap className="w-4 h-4 text-[#35D6E8]" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#F4F7FC]">
-              Live Typing Sandbox
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-[#35D6E8] bg-[#35D6E8]/10 border border-[#35D6E8]/20 px-2 py-0.5 rounded-full">
+                TELEMETRY ENGINE ACTIVE
+              </span>
+              <span className="text-xs text-[#94A3B8] font-mono">
+                {isEnrolled
+                  ? `Baseline: ${sampleCount} enrolled samples`
+                  : `Enrolling: ${sampleCount}/10`}
+              </span>
+            </div>
+            <h2 className="text-lg font-bold text-[#F4F7FC] tracking-tight">
+              Live Behavioural Monitoring
             </h2>
             <p className="text-xs text-[#94A3B8]">
-              Type below to observe your physical typing cadence and test continuous rhythm matching.
+              Continuous physical keystroke dynamic capture, rhythm telemetry,
+              and live deviation tracking.
             </p>
           </div>
         </div>
@@ -294,7 +313,7 @@ export function LiveBehaviouralMonitor({
               className="text-[#35D6E8] border-[#35D6E8]/30 hover:bg-[#35D6E8]/10"
             >
               <Sparkles className="w-3.5 h-3.5 mr-1" />
-              Evaluate Now
+              Evaluate Window
             </Button>
           )}
 
@@ -306,145 +325,213 @@ export function LiveBehaviouralMonitor({
             disabled={events.length === 0}
             className="text-[#94A3B8] hover:text-[#F4F7FC]"
           >
-            <RotateCcw className="w-3.5 h-3.5 mr-1" /> Clear
+            <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
           </Button>
         </div>
       </div>
 
-      {/* Typing Input */}
-      <div className="mt-4 relative">
+      {/* Interactive Typing Sandbox Area */}
+      <div className="mt-5 relative">
         <textarea
           rows={3}
           value={typedText}
           onChange={(e) => setTypedText(e.target.value)}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
-          placeholder="Click here and type naturally (e.g. 'Security begins with unique typing cadence')..."
-          className="w-full bg-[#0D1320] border border-[#243247] focus:border-[#35D6E8] focus:ring-1 focus:ring-[#35D6E8]/30 rounded-xl p-3.5 text-xs text-[#F4F7FC] placeholder-[#94A3B8]/40 outline-none transition-all resize-none shadow-inner"
+          placeholder="Click here and type continuously to test live behavioral biometric telemetry in real-time..."
+          className="w-full bg-[#0D1320] border border-[#243247] focus:border-[#35D6E8] focus:ring-1 focus:ring-[#35D6E8]/30 rounded-xl p-4 text-xs font-mono text-[#F4F7FC] placeholder-[#94A3B8]/50 outline-none transition-all resize-none shadow-inner"
         />
 
-        {/* Floating Mini HUD */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-2.5 bg-[#111927]/95 px-2.5 py-1 rounded-lg border border-[#243247] text-[11px] font-mono backdrop-blur-md select-none pointer-events-none">
-          {/* Animated Waveform */}
-          <div className="flex items-end gap-0.5 h-3.5 px-0.5 border-r border-[#243247] pr-2">
-            {waveformWave.slice(0, 10).map((val, idx) => (
+        {/* Floating Live Telemetry HUD Bar */}
+        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-[#111927]/95 px-3 py-1.5 rounded-lg border border-[#243247] text-xs font-mono backdrop-blur-md select-none pointer-events-none">
+          {/* Real-time Oscillating Waveform */}
+          <div className="flex items-end gap-0.5 h-4 px-1 border-r border-[#243247] pr-2.5">
+            {waveformWave.slice(0, 12).map((val, idx) => (
               <div
                 key={idx}
                 className={`w-1 rounded-full transition-all duration-100 ${
-                  events.length > 0 ? (idx % 2 === 0 ? "bg-[#35D6E8]" : "bg-[#8B7CFF]") : "bg-[#243247]"
+                  events.length > 0
+                    ? idx % 2 === 0
+                      ? "bg-[#35D6E8]"
+                      : "bg-[#8B7CFF]"
+                    : "bg-[#243247]"
                 }`}
-                style={{ height: `${(val / 32) * 100}%` }}
+                style={{ height: `${(val / 36) * 100}%` }}
               />
             ))}
           </div>
 
-          <span className="text-[#94A3B8]">
-            Keys: <strong className="text-[#32D6A0]">{events.length}</strong>
-          </span>
+          <div className="flex items-center gap-1.5 text-[#94A3B8]">
+            <Clock className="w-3 h-3 text-[#35D6E8]" />
+            <span className="text-[11px]">Hold:</span>
+            <span className="text-[#F4F7FC] font-semibold text-[11px]">
+              {currentHold !== null ? `${currentHold}ms` : "—"}
+            </span>
+          </div>
+
+          <div className="w-[1px] h-3 bg-[#243247]" />
+
+          <div className="flex items-center gap-1.5 text-[#94A3B8]">
+            <Zap className="w-3 h-3 text-[#8B7CFF]" />
+            <span className="text-[11px]">Flight:</span>
+            <span className="text-[#F4F7FC] font-semibold text-[11px]">
+              {currentFlight !== null ? `${currentFlight}ms` : "—"}
+            </span>
+          </div>
+
+          <div className="w-[1px] h-3 bg-[#243247]" />
+
+          <div className="flex items-center gap-1 text-[11px]">
+            <span className="text-[#94A3B8]">Keys:</span>
+            <span className="text-[#32D6A0] font-bold">{events.length}</span>
+          </div>
         </div>
       </div>
 
-      {/* 3 Simple, Clear Primary Meters */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-        {/* Speed */}
-        <div className="p-3 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-between">
-          <div>
-            <span className="text-[11px] text-[#94A3B8] block">Typing Speed</span>
-            <span className="text-base font-bold text-[#F4F7FC]">
-              {telemetry.cadenceWpm !== null ? `${telemetry.cadenceWpm} WPM` : "—"}
+      {/* 6 Real-Time Telemetry Metric Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5">
+        {/* Metric 1: Typing Cadence */}
+        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+          <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
+            Typing Cadence
+          </span>
+          <div className="mt-1.5">
+            <span className="text-lg font-bold text-[#F4F7FC]">
+              {telemetry.cadenceWpm !== null ? `${telemetry.cadenceWpm} WPM` : "N/A"}
             </span>
-          </div>
-          <div className="text-right">
-            <span className="text-[10px] text-[#94A3B8] font-mono">
+            <span className="text-[10px] text-[#94A3B8] block mt-0.5">
               {telemetry.kps !== null ? `${telemetry.kps} keys/sec` : "Standby"}
             </span>
           </div>
         </div>
 
-        {/* Key Press Hold */}
-        <div className="p-3 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-between">
-          <div>
-            <span className="text-[11px] text-[#94A3B8] block">Key Press Hold</span>
-            <span className="text-base font-bold text-[#35D6E8]">
-              {telemetry.meanHold !== null ? `${telemetry.meanHold} ms` : "—"}
+        {/* Metric 2: Mean Key Hold Duration */}
+        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+          <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
+            Mean Key Hold
+          </span>
+          <div className="mt-1.5">
+            <span className="text-lg font-bold text-[#35D6E8]">
+              {telemetry.meanHold !== null ? `${telemetry.meanHold} ms` : "N/A"}
             </span>
-          </div>
-          <div className="text-right">
-            <span className="text-[10px] text-[#94A3B8] font-mono">
-              {baselineProfile?.avgHoldMs ? `Target ~${baselineProfile.avgHoldMs}ms` : "Calibrating"}
+            <span className="text-[10px] text-[#94A3B8] block mt-0.5">
+              Target: {baselineProfile?.avgHoldMs ? `${baselineProfile.avgHoldMs}ms` : "Calibrating"}
             </span>
           </div>
         </div>
 
-        {/* Verification Status */}
-        <div className="p-3 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-between">
-          <div>
-            <span className="text-[11px] text-[#94A3B8] block">Rhythm Match</span>
-            <div className="mt-0.5">
-              {authStatus === "MATCH" ? (
-                <Badge variant="match">MATCH • GENUINE</Badge>
-              ) : authStatus === "REVIEW" ? (
-                <Badge variant="review">NEEDS REVIEW</Badge>
-              ) : authStatus === "EVALUATING" ? (
-                <Badge variant="cyan">EVALUATING...</Badge>
-              ) : authStatus === "CAPTURING" ? (
-                <Badge variant="neutral">TYPING...</Badge>
-              ) : (
-                <Badge variant="neutral">STANDBY</Badge>
-              )}
-            </div>
-          </div>
-          {telemetry.confidencePercent !== null && (
-            <span className="text-sm font-bold text-[#32D6A0] font-mono">
-              {telemetry.confidencePercent}%
+        {/* Metric 3: Mean Flight Duration */}
+        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+          <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
+            Mean Flight Time
+          </span>
+          <div className="mt-1.5">
+            <span className="text-lg font-bold text-[#8B7CFF]">
+              {telemetry.meanFlight !== null ? `${telemetry.meanFlight} ms` : "N/A"}
             </span>
-          )}
+            <span className="text-[10px] text-[#94A3B8] block mt-0.5">
+              Target: {baselineProfile?.avgFlightMs ? `${baselineProfile.avgFlightMs}ms` : "Calibrating"}
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 4: Keystrokes Per Second */}
+        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+          <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
+            Keystrokes / Sec
+          </span>
+          <div className="mt-1.5">
+            <span className="text-lg font-bold text-[#F4F7FC]">
+              {telemetry.kps !== null ? `${telemetry.kps} KPS` : "N/A"}
+            </span>
+            <span className="text-[10px] text-[#94A3B8] block mt-0.5">
+              Physical frequency
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 5: Behavioural Deviation */}
+        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+          <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
+            Deviation (D_M)
+          </span>
+          <div className="mt-1.5">
+            <span
+              className={`text-lg font-bold font-mono ${
+                telemetry.deviation === null
+                  ? "text-[#94A3B8]"
+                  : telemetry.deviation <= 2.8
+                  ? "text-[#32D6A0]"
+                  : telemetry.deviation <= 4.0
+                  ? "text-[#FFBF55]"
+                  : "text-[#FF647C]"
+              }`}
+            >
+              {telemetry.deviation !== null ? telemetry.deviation.toFixed(2) : "N/A"}
+            </span>
+            <span className="text-[10px] text-[#94A3B8] block mt-0.5 font-mono">
+              Threshold τ: 2.80
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 6: Verification Confidence */}
+        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+          <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
+            Confidence
+          </span>
+          <div className="mt-1.5">
+            <span className="text-lg font-bold text-[#32D6A0]">
+              {telemetry.confidencePercent !== null
+                ? `${telemetry.confidencePercent}%`
+                : "N/A"}
+            </span>
+            <span className="text-[10px] text-[#94A3B8] block mt-0.5">
+              {isEnrolled ? "Baseline active" : "Enrollment required"}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Advanced Diagnostics Toggle */}
-      <div className="mt-3 pt-3 border-t border-[#243247]/60 flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center justify-between text-xs text-[#94A3B8] hover:text-[#F4F7FC] transition-colors py-1 cursor-pointer"
-        >
-          <span className="font-mono text-[11px] flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-[#35D6E8]" />
-            {showAdvanced ? "Hide Technical Diagnostics" : "View Technical Diagnostics (Flight Time, Deviation & Scores)"}
-          </span>
-          {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        </button>
+      {/* Live Status and Evaluation Banner */}
+      <div className="mt-4 p-3.5 rounded-xl bg-[#0D1320]/80 border border-[#243247] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[#94A3B8]">Authentication Status:</span>
+            {authStatus === "MATCH" ? (
+              <Badge variant="match">AUTHENTICATED • PATTERN MATCH</Badge>
+            ) : authStatus === "REVIEW" ? (
+              <Badge variant="review">ANOMALOUS • NEEDS REVIEW</Badge>
+            ) : authStatus === "EVALUATING" ? (
+              <Badge variant="cyan">EVALUATING RHYTHM...</Badge>
+            ) : authStatus === "CAPTURING" ? (
+              <Badge variant="neutral">STREAMING TELEMETRY ({events.length} KEYS)</Badge>
+            ) : (
+              <Badge variant="neutral">STANDBY • AWAITING INPUT</Badge>
+            )}
+          </div>
+        </div>
 
-        {showAdvanced && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 animate-in fade-in duration-150">
-            <div className="p-2.5 rounded-lg bg-[#0D1320]/80 border border-[#243247]">
-              <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Flight Transition</span>
-              <span className="text-xs font-bold text-[#8B7CFF] font-mono mt-0.5 block">
-                {telemetry.meanFlight !== null ? `${telemetry.meanFlight} ms` : "N/A"}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-[#0D1320]/80 border border-[#243247]">
-              <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Deviation (D_M)</span>
-              <span className="text-xs font-bold text-[#F4F7FC] font-mono mt-0.5 block">
-                {telemetry.deviation !== null ? telemetry.deviation.toFixed(2) : "N/A"}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-[#0D1320]/80 border border-[#243247]">
-              <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Threshold (τ)</span>
-              <span className="text-xs font-bold text-[#35D6E8] font-mono mt-0.5 block">
-                {backendThreshold ?? 2.80}
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-lg bg-[#0D1320]/80 border border-[#243247]">
-              <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Algorithm</span>
-              <span className="text-xs font-bold text-[#32D6A0] font-mono mt-0.5 block">
-                Robust MAD
-              </span>
-            </div>
+        {backendScore !== null && (
+          <div className="flex items-center gap-3 font-mono text-[11px] text-[#94A3B8]">
+            <span>
+              Mahalanobis Distance:{" "}
+              <strong className="text-[#F4F7FC]">
+                {backendScore.toFixed(2)}
+              </strong>
+            </span>
+            <span>
+              Decision:{" "}
+              <strong
+                className={
+                  backendDecision === "MATCH"
+                    ? "text-[#32D6A0]"
+                    : "text-[#FFBF55]"
+                }
+              >
+                {backendDecision}
+              </strong>
+            </span>
           </div>
         )}
       </div>
