@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../hooks/useAuth.js";
@@ -12,26 +12,21 @@ import {
   Activity,
   UserCheck,
   TrendingUp,
-  Cpu,
   Clock,
   CheckCircle2,
-  BookOpen,
   ArrowRight,
   AlertTriangle,
   Zap,
   Radio,
+  ChevronDown,
+  ChevronUp,
   FileCode2,
   Sliders,
 } from "lucide-react";
-import { PROFILE_STATUS } from "@keytrace/shared";
 
 export function DashboardPage() {
   const { user } = useAuth();
-  const [lastSyncTime, setLastSyncTime] = useState<string>("");
-
-  useEffect(() => {
-    setLastSyncTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-  }, []);
+  const [showTechSpecs, setShowTechSpecs] = useState(false);
 
   // Fetch enrollment status
   const { data: enrollmentData } = useQuery({
@@ -48,7 +43,7 @@ export function DashboardPage() {
   // Fetch recent history events
   const { data: historyData, isLoading: isHistoryLoading } = useQuery({
     queryKey: ["recent-history"],
-    queryFn: () => api.history.getEvents(1, 6),
+    queryFn: () => api.history.getEvents(1, 5),
   });
 
   const sampleCount = enrollmentData?.count ?? user?.sampleCount ?? 0;
@@ -67,366 +62,269 @@ export function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col gap-8 py-4">
-      {/* 1. COMMAND CENTER HERO SECTION */}
-      <div className="relative rounded-2xl bg-[#111927] border border-[#243247] p-6 sm:p-8 overflow-hidden shadow-2xl">
-        {/* Subtle radial ambient highlight */}
-        <div className="pointer-events-none absolute top-0 right-0 w-96 h-96 bg-[#35D6E8]/[0.05] rounded-full blur-[100px]" />
-        
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+    <div className="flex flex-col gap-6 py-2">
+      {/* 1. HERO: CLEAN, REASSURING STATUS */}
+      <div className="relative rounded-2xl bg-[#111927] border border-[#243247] p-6 sm:p-7 overflow-hidden shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
           <div>
-            {/* Top Badges */}
-            <div className="flex flex-wrap items-center gap-2.5 mb-2">
-              <span className="text-[10px] uppercase font-mono tracking-widest text-[#35D6E8] bg-[#35D6E8]/10 border border-[#35D6E8]/20 px-2.5 py-0.5 rounded-full font-semibold">
-                COMMAND CENTER
-              </span>
-              <div className="flex items-center gap-1.5 text-xs text-[#32D6A0] bg-[#32D6A0]/10 border border-[#32D6A0]/20 px-2.5 py-0.5 rounded-full font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#32D6A0] animate-pulse" />
-                SYSTEM OPERATIONAL
-              </div>
-              <span className="text-[11px] text-[#94A3B8] font-mono">
-                Operator: <strong className="text-[#F4F7FC]">{user?.username}</strong> ({user?.role})
-              </span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-[#32D6A0] animate-pulse" />
+              <span className="text-xs font-semibold text-[#32D6A0]">SYSTEM OPERATIONAL</span>
+              <span className="text-xs text-[#94A3B8]">•</span>
+              <span className="text-xs text-[#94A3B8]">Logged in as <strong className="text-[#F4F7FC]">{user?.username}</strong></span>
             </div>
 
-            {/* Title */}
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F4F7FC]">
-              Welcome back, <span className="text-[#35D6E8]">{user?.username}</span>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#F4F7FC]">
+              {isEnrolled ? (
+                <span>Biometric Protection is <span className="text-[#32D6A0]">Active</span></span>
+              ) : (
+                <span>Enrollment in Progress (<span className="text-[#35D6E8]">{sampleCount}/10</span>)</span>
+              )}
             </h1>
 
-            {/* Status Strip */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#94A3B8] mt-2 font-mono">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#94A3B8]">Baseline Status:</span>
-                {isEnrolled ? (
-                  <span className="text-[#32D6A0] font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> 10/10 READY
-                  </span>
-                ) : (
-                  <span className="text-[#FFBF55] font-semibold">
-                    {sampleCount}/10 ENROLLING
-                  </span>
-                )}
-              </div>
-              <span className="text-[#243247]">•</span>
-              <div>
-                Last Synchronization: <span className="text-[#F4F7FC]">{lastSyncTime || "Realtime"}</span>
-              </div>
-              <span className="text-[#243247]">•</span>
-              <div>
-                Engine: <span className="text-[#8B7CFF]">Mahalanobis D_M (τ=2.80)</span>
-              </div>
-            </div>
+            <p className="text-xs sm:text-sm text-[#94A3B8] mt-1 max-w-xl">
+              {isEnrolled
+                ? "Your baseline typing rhythm is calibrated. KEYTRACE continuously verifies your identity without logging typed characters."
+                : `Complete ${10 - sampleCount} more short typing samples to establish your personalized biometric baseline.`}
+            </p>
           </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {!isEnrolled ? (
+              <Link to="/enrollment">
+                <Button variant="primary" size="sm">
+                  Continue Enrollment ({sampleCount}/10) <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/verification">
+                <Button variant="primary" size="sm">
+                  <Shield className="w-3.5 h-3.5 mr-1 text-[#080B12]" />
+                  Verify Rhythm
+                </Button>
+              </Link>
+            )}
+
             <Button
               variant="secondary"
               size="sm"
               onClick={scrollToLiveMonitor}
               className="text-[#F4F7FC] border-[#243247] hover:border-[#35D6E8]/40"
             >
-              <Zap className="w-3.5 h-3.5 text-[#35D6E8] mr-1.5" />
-              Live Monitor
+              <Zap className="w-3.5 h-3.5 text-[#35D6E8] mr-1" />
+              Try Live Sandbox
             </Button>
-            <Link to="/verification">
-              <Button variant="primary" size="sm">
-                <Shield className="w-3.5 h-3.5 mr-1.5 text-[#080B12]" />
-                Start Verification
-              </Button>
-            </Link>
           </div>
         </div>
       </div>
 
-      {/* 2. TOP 4 METRIC CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Metric 1: Profile Baseline */}
-        <Card elevated className="flex flex-col justify-between hover:border-[#344560] transition-all">
+      {/* 2. FOUR CLEAN, FOCUSED STATUS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: Baseline */}
+        <Card elevated className="p-4 flex flex-col justify-between hover:border-[#344560] transition-all">
           <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-[#94A3B8] font-medium uppercase font-mono">
-                Profile Baseline
+            <div>
+              <span className="text-[11px] text-[#94A3B8] block">Profile Baseline</span>
+              <span className="text-xl font-bold text-[#F4F7FC] mt-0.5 block font-mono">
+                {sampleCount} / 10
               </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-extrabold text-[#F4F7FC] font-mono">
-                  {sampleCount} / 10
-                </span>
-                <span className="text-xs text-[#94A3B8]">samples</span>
-              </div>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#35D6E8]">
+            <div className="w-8 h-8 rounded-lg bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#35D6E8]">
               <UserCheck className="w-4 h-4" />
             </div>
           </div>
-
-          <div className="mt-4 pt-3 border-t border-[#243247] flex flex-col gap-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-[#94A3B8]">Status</span>
-              {isEnrolled ? (
-                <Badge variant="match">Ready</Badge>
-              ) : (
-                <Badge variant="review">{progressPercent}% Enrolled</Badge>
-              )}
-            </div>
-            <div className="w-full h-1.5 bg-[#0D1320] rounded-full overflow-hidden border border-[#243247]">
-              <div
-                className={`h-full transition-all duration-500 rounded-full ${
-                  isEnrolled ? "bg-[#32D6A0]" : "bg-[#35D6E8]"
-                }`}
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
+          <div className="mt-3 pt-2.5 border-t border-[#243247]/60 flex items-center justify-between text-[11px]">
+            <span className="text-[#94A3B8]">Status</span>
+            {isEnrolled ? (
+              <Badge variant="match">Ready</Badge>
+            ) : (
+              <span className="text-[#FFBF55] font-semibold">{progressPercent}%</span>
+            )}
           </div>
         </Card>
 
-        {/* Metric 2: Match Consistency */}
-        <Card elevated className="flex flex-col justify-between hover:border-[#344560] transition-all">
+        {/* Card 2: Match Consistency */}
+        <Card elevated className="p-4 flex flex-col justify-between hover:border-[#344560] transition-all">
           <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-[#94A3B8] font-medium uppercase font-mono">
-                Match Consistency
+            <div>
+              <span className="text-[11px] text-[#94A3B8] block">Match Consistency</span>
+              <span className="text-xl font-bold text-[#F4F7FC] mt-0.5 block font-mono">
+                {matchRateDisplay}
               </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-extrabold text-[#F4F7FC] font-mono">
-                  {matchRateDisplay}
-                </span>
-              </div>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#32D6A0]">
+            <div className="w-8 h-8 rounded-lg bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#32D6A0]">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-
-          <div className="mt-4 pt-3 border-t border-[#243247] flex items-center justify-between text-xs text-[#94A3B8]">
+          <div className="mt-3 pt-2.5 border-t border-[#243247]/60 flex items-center justify-between text-[11px] text-[#94A3B8]">
             <span>Evaluations</span>
-            <span className="text-[#F4F7FC] font-semibold font-mono">
-              {hasEvaluationData ? `${analyticsData?.stats?.matchCount} matches` : "Pending Data"}
+            <span className="text-[#F4F7FC] font-semibold">
+              {hasEvaluationData ? `${analyticsData?.stats?.matchCount} matches` : "Pending tests"}
             </span>
           </div>
         </Card>
 
-        {/* Metric 3: Risk Events */}
-        <Card elevated className="flex flex-col justify-between hover:border-[#344560] transition-all">
+        {/* Card 3: Security Flags */}
+        <Card elevated className="p-4 flex flex-col justify-between hover:border-[#344560] transition-all">
           <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-[#94A3B8] font-medium uppercase font-mono">
-                Risk Events
+            <div>
+              <span className="text-[11px] text-[#94A3B8] block">Security Alerts</span>
+              <span
+                className={`text-xl font-bold mt-0.5 block font-mono ${
+                  riskEventsCount > 0 ? "text-[#FFBF55]" : "text-[#F4F7FC]"
+                }`}
+              >
+                {riskEventsCount}
               </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span
-                  className={`text-2xl font-extrabold font-mono ${
-                    riskEventsCount > 0 ? "text-[#FFBF55]" : "text-[#F4F7FC]"
-                  }`}
-                >
-                  {riskEventsCount}
-                </span>
-                <span className="text-xs text-[#94A3B8]">anomalies</span>
-              </div>
             </div>
             <div
-              className={`w-9 h-9 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center ${
+              className={`w-8 h-8 rounded-lg bg-[#0D1320] border border-[#243247] flex items-center justify-center ${
                 riskEventsCount > 0 ? "text-[#FFBF55]" : "text-[#94A3B8]"
               }`}
             >
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-
-          <div className="mt-4 pt-3 border-t border-[#243247] flex items-center justify-between text-xs text-[#94A3B8]">
-            <span>Threshold (τ)</span>
-            <span className="text-[#F4F7FC] font-semibold font-mono">
-              2.80 Cutoff
+          <div className="mt-3 pt-2.5 border-t border-[#243247]/60 flex items-center justify-between text-[11px] text-[#94A3B8]">
+            <span>Condition</span>
+            <span className={riskEventsCount > 0 ? "text-[#FFBF55] font-semibold" : "text-[#32D6A0] font-semibold"}>
+              {riskEventsCount > 0 ? "Needs Review" : "Normal"}
             </span>
           </div>
         </Card>
 
-        {/* Metric 4: Active Sessions */}
-        <Card elevated className="flex flex-col justify-between hover:border-[#344560] transition-all">
+        {/* Card 4: Active Protection */}
+        <Card elevated className="p-4 flex flex-col justify-between hover:border-[#344560] transition-all">
           <div className="flex items-start justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-[#94A3B8] font-medium uppercase font-mono">
-                Active Sessions
+            <div>
+              <span className="text-[11px] text-[#94A3B8] block">Active Protection</span>
+              <span className="text-xl font-bold text-[#F4F7FC] mt-0.5 block font-mono">
+                {activeSessionsCount > 0 ? `${activeSessionsCount} Live` : "Active"}
               </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-extrabold text-[#F4F7FC] font-mono">
-                  {activeSessionsCount}
-                </span>
-                <span className="text-xs text-[#94A3B8]">telemetry streams</span>
-              </div>
             </div>
-            <div className="w-9 h-9 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#8B7CFF]">
+            <div className="w-8 h-8 rounded-lg bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#8B7CFF]">
               <Radio className="w-4 h-4" />
             </div>
           </div>
-
-          <div className="mt-4 pt-3 border-t border-[#243247] flex items-center justify-between text-xs text-[#94A3B8]">
-            <span>Continuous Auth</span>
-            <span className="text-[#32D6A0] font-semibold font-mono">Active</span>
+          <div className="mt-3 pt-2.5 border-t border-[#243247]/60 flex items-center justify-between text-[11px] text-[#94A3B8]">
+            <span>Zero-Keylogging</span>
+            <span className="text-[#32D6A0] font-semibold">Enabled</span>
           </div>
         </Card>
       </div>
 
-      {/* 3. LIVE BEHAVIOURAL MONITORING SECTION */}
+      {/* 3. INTERACTIVE LIVE MONITORING */}
       <LiveBehaviouralMonitor
         baselineProfile={analyticsData?.stats?.cadenceProfile}
         isEnrolled={isEnrolled}
         sampleCount={sampleCount}
       />
 
-      {/* 4. SPLIT: CONTINUOUS RISK ASSESSMENT & RECENT ACTIVITY TIMELINE */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Continuous Risk Assessment Overview */}
-        <div className="lg:col-span-2 flex flex-col gap-5">
-          <Card elevated className="p-6 flex flex-col gap-5">
-            <div className="flex items-start justify-between pb-4 border-b border-[#243247]">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Shield className="w-4 h-4 text-[#35D6E8]" />
-                  <span className="text-[10px] uppercase font-mono text-[#35D6E8] tracking-wider">
-                    SECURITY ARCHITECTURE
+      {/* 4. RECENT ACTIVITY TIMELINE */}
+      <Card elevated className="p-5 flex flex-col gap-3">
+        <div className="flex items-center justify-between pb-3 border-b border-[#243247]">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#35D6E8]" />
+            <span className="text-xs font-bold text-[#F4F7FC] uppercase tracking-wider">
+              Recent Verification Activity
+            </span>
+          </div>
+          <Link to="/history" className="text-xs text-[#35D6E8] hover:underline font-mono">
+            View full history &rarr;
+          </Link>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          {isHistoryLoading ? (
+            <div className="text-xs text-[#94A3B8] py-6 text-center font-mono">
+              Loading recent activity...
+            </div>
+          ) : historyData?.events && historyData.events.length > 0 ? (
+            historyData.events.slice(0, 4).map((ev: any) => (
+              <div
+                key={ev._id}
+                className="p-3 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-between text-xs"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <DecisionBadge decision={ev.decision} />
+                  <span className="text-[11px] text-[#94A3B8] font-mono">
+                    {new Date(ev.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
-                <h3 className="text-base font-bold text-[#F4F7FC]">
-                  Continuous Risk Assessment Engine
-                </h3>
-                <p className="text-xs text-[#94A3B8] mt-0.5">
-                  Real-time sliding window evaluation using regularized Mahalanobis distance with Ledoit-Wolf shrinkage.
-                </p>
+
+                <div className="flex items-center gap-3 font-mono text-[11px] text-[#94A3B8]">
+                  <span>Score: <strong className="text-[#F4F7FC]">{ev.score !== null ? Number(ev.score).toFixed(2) : "—"}</strong></span>
+                  <span className="hidden sm:inline">Cutoff: {ev.threshold || 2.8}</span>
+                </div>
               </div>
-              <Link to="/docs">
-                <Button variant="ghost" size="xs" className="text-[#35D6E8] hover:bg-[#35D6E8]/10">
-                  <FileCode2 className="w-3.5 h-3.5 mr-1" /> Formula Docs
-                </Button>
+            ))
+          ) : (
+            <div className="py-8 text-center text-xs text-[#94A3B8] flex flex-col items-center gap-1.5">
+              <Activity className="w-7 h-7 text-[#243247]" />
+              <span>No verification tests recorded yet.</span>
+              <Link to="/verification" className="text-[#35D6E8] hover:underline text-xs mt-1">
+                Start your first verification test &rarr;
               </Link>
             </div>
+          )}
+        </div>
+      </Card>
 
-            {/* Risk Threshold & Formula Breakdown */}
+      {/* 5. COLLAPSIBLE TECHNICAL ARCHITECTURE & MATHEMATICAL FORMULATION */}
+      <div className="rounded-xl border border-[#243247] bg-[#111927]/60 p-4 transition-all">
+        <button
+          type="button"
+          onClick={() => setShowTechSpecs(!showTechSpecs)}
+          className="w-full flex items-center justify-between text-left text-xs font-medium text-[#94A3B8] hover:text-[#F4F7FC] transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <Sliders className="w-3.5 h-3.5 text-[#35D6E8]" />
+            <span className="font-semibold text-[#F4F7FC]">
+              {showTechSpecs ? "Hide Technical Specifications" : "View Security Architecture & Mathematical Formulation"}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-[#35D6E8]">
+            <span>{showTechSpecs ? "Collapse" : "Expand"}</span>
+            {showTechSpecs ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </div>
+        </button>
+
+        {showTechSpecs && (
+          <div className="mt-4 pt-4 border-t border-[#243247] flex flex-col gap-4 animate-in fade-in duration-150 text-xs">
+            <p className="text-[#94A3B8] leading-relaxed">
+              KEYTRACE calculates continuous verification decisions using regularized Mahalanobis distance with Ledoit-Wolf shrinkage across a 10-dimensional feature space (hold times, flight latencies, jitter, and pause ratios).
+            </p>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-4 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col gap-1">
-                <span className="text-[10px] text-[#94A3B8] uppercase font-mono">Decision Threshold</span>
-                <span className="text-xl font-extrabold text-[#35D6E8] font-mono">τ = 2.80</span>
-                <span className="text-[11px] text-[#94A3B8]">
-                  Hysteresis tolerance: [2.50 - 2.80]
-                </span>
+              <div className="p-3 rounded-lg bg-[#0D1320] border border-[#243247]">
+                <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Cutoff Threshold</span>
+                <span className="text-sm font-bold text-[#35D6E8] font-mono mt-0.5 block">τ = 2.80</span>
+                <span className="text-[10px] text-[#94A3B8]">Tolerance band: [2.50 – 2.80]</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col gap-1">
-                <span className="text-[10px] text-[#94A3B8] uppercase font-mono">Feature Vector</span>
-                <span className="text-xl font-extrabold text-[#8B7CFF] font-mono">10 Dimensions</span>
-                <span className="text-[11px] text-[#94A3B8]">
-                  Hold, flight, jitter & pause metrics
-                </span>
+              <div className="p-3 rounded-lg bg-[#0D1320] border border-[#243247]">
+                <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Biometric Dimensions</span>
+                <span className="text-sm font-bold text-[#8B7CFF] font-mono mt-0.5 block">10 Features</span>
+                <span className="text-[10px] text-[#94A3B8]">Hold, flight &amp; pause timings</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col gap-1">
-                <span className="text-[10px] text-[#94A3B8] uppercase font-mono">Covariance Estimator</span>
-                <span className="text-xl font-extrabold text-[#32D6A0] font-mono">Ledoit-Wolf</span>
-                <span className="text-[11px] text-[#94A3B8]">
-                  Robust inversion against singularity
-                </span>
+              <div className="p-3 rounded-lg bg-[#0D1320] border border-[#243247]">
+                <span className="text-[10px] text-[#94A3B8] block uppercase font-mono">Covariance Estimator</span>
+                <span className="text-sm font-bold text-[#32D6A0] font-mono mt-0.5 block">Ledoit-Wolf</span>
+                <span className="text-[10px] text-[#94A3B8]">Singularity-resistant shrinkage</span>
               </div>
             </div>
 
-            {/* Severity Threshold Classification Bar */}
-            <div className="p-4 rounded-xl bg-[#0D1320]/60 border border-[#243247] flex flex-col gap-2.5">
-              <span className="text-xs font-semibold text-[#F4F7FC] flex items-center gap-1.5">
-                <Sliders className="w-3.5 h-3.5 text-[#35D6E8]" /> Dynamic Classification Spectrum
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="p-2.5 rounded-lg bg-[#32D6A0]/10 border border-[#32D6A0]/20 flex flex-col">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#32D6A0]">MATCH</span>
-                    <span className="font-mono text-[10px] text-[#32D6A0]">D_M ≤ 2.80</span>
-                  </div>
-                  <span className="text-[10px] text-[#94A3B8] mt-1">Rhythm matches genuine operator profile.</span>
-                </div>
-
-                <div className="p-2.5 rounded-lg bg-[#FFBF55]/10 border border-[#FFBF55]/20 flex flex-col">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#FFBF55]">REVIEW</span>
-                    <span className="font-mono text-[10px] text-[#FFBF55]">2.80 &lt; D_M ≤ 4.0</span>
-                  </div>
-                  <span className="text-[10px] text-[#94A3B8] mt-1">Deviations detected; step-up verification needed.</span>
-                </div>
-
-                <div className="p-2.5 rounded-lg bg-[#FF647C]/10 border border-[#FF647C]/20 flex flex-col">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#FF647C]">ALERT</span>
-                    <span className="font-mono text-[10px] text-[#FF647C]">D_M &gt; 4.00</span>
-                  </div>
-                  <span className="text-[10px] text-[#94A3B8] mt-1">Severe rhythm mismatch or imposter activity.</span>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Right Col: Recent Activity Timeline */}
-        <div className="flex flex-col gap-4">
-          <Card elevated className="flex flex-col h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 mb-2 border-b border-[#243247]">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-[#F4F7FC] flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#35D6E8]" /> Recent Activity Log
-              </CardTitle>
-              <Link to="/history" className="text-xs text-[#35D6E8] hover:underline font-mono">
-                View all &rarr;
+            <div className="flex justify-end">
+              <Link to="/docs" className="text-xs text-[#35D6E8] hover:underline flex items-center gap-1 font-mono">
+                <FileCode2 className="w-3.5 h-3.5" /> Read full mathematical documentation &rarr;
               </Link>
-            </CardHeader>
-
-            <div className="flex flex-col gap-2.5 flex-1 p-2">
-              {isHistoryLoading ? (
-                <div className="text-xs text-[#94A3B8] py-8 text-center font-mono">
-                  Loading telemetry stream...
-                </div>
-              ) : historyData?.events && historyData.events.length > 0 ? (
-                historyData.events.map((ev: any) => (
-                  <div
-                    key={ev._id}
-                    className="p-3 rounded-xl bg-[#0D1320] border border-[#243247] hover:border-[#344560] transition-colors flex items-center justify-between text-xs"
-                  >
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <DecisionBadge decision={ev.decision} />
-                        <span className="text-[10px] font-mono text-[#94A3B8] truncate">
-                          #{ev._id.slice(-6)}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-[#94A3B8] font-mono">
-                        {new Date(ev.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col items-end shrink-0 pl-2">
-                      <span className="text-[#F4F7FC] font-mono font-bold text-xs">
-                        {ev.score !== null ? `D_M: ${Number(ev.score).toFixed(2)}` : "N/A"}
-                      </span>
-                      <span className="text-[10px] text-[#94A3B8] font-mono">
-                        τ: {ev.threshold || 2.8}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="py-10 text-center text-xs text-[#94A3B8] flex flex-col items-center gap-2">
-                  <Activity className="w-8 h-8 text-[#243247]" />
-                  <span>No verification events recorded yet.</span>
-                  <Link
-                    to="/verification"
-                    className="text-[#35D6E8] hover:underline font-medium mt-1 font-mono text-xs"
-                  >
-                    Launch first test &rarr;
-                  </Link>
-                </div>
-              )}
             </div>
-          </Card>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
