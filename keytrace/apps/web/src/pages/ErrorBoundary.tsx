@@ -29,10 +29,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6 gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#FF647C]/10 border border-[#FF647C]/30 flex items-center justify-center text-[#FF647C] mb-2 shadow-lg">
+          <div className="w-16 h-16 rounded-2xl bg-[#EF4444]/10 border border-[#EF4444]/30 flex items-center justify-center text-[#EF4444] mb-2 shadow-lg">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-[#F4F7FC]">Application Encountered an Error</h1>
+          <h1 className="text-2xl font-bold text-[#F8FAFC]">Application Encountered an Error</h1>
           <p className="text-xs text-[#94A3B8] max-w-md">
             An unexpected error occurred within the user interface. We apologize for the inconvenience.
           </p>

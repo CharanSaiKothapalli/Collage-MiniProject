@@ -13,8 +13,10 @@ import {
 } from "../schemas/index.js";
 import {
   ConsentStatusType,
+  EnrollmentStageType,
   FeatureName,
   ProfileStatusType,
+  SampleType,
   UserRoleType,
   VerificationDecisionType,
 } from "../constants/index.js";
@@ -57,6 +59,9 @@ export interface TypingProfileDto {
   status: ProfileStatusType;
   featureSchemaVersion: string;
   enrollmentCount: number;
+  calibrationCount?: number;
+  naturalCount?: number;
+  enrollmentStage?: EnrollmentStageType;
   modelVersion: string;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +71,7 @@ export interface TypingSampleDto {
   id: string;
   userId: string;
   profileId: string;
+  sampleType?: SampleType;
   featureVector: FeatureVector;
   featureSchemaVersion: string;
   qualityStatus: "valid" | "warning" | "rejected";

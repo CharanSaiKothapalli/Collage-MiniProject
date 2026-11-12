@@ -11,6 +11,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setPaletteOpen((prev) => !prev);
+      } else if (e.key === "Escape") {
+        setPaletteOpen(false);
       }
     };
 
@@ -26,13 +28,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#080B12] text-[#F4F7FC] relative overflow-hidden selection:bg-[#35D6E8]/20 selection:text-[#35D6E8]">
-      {/* Subtle top spotlight glow (Obsidian Pulse cyan & violet) */}
-      <div className="pointer-events-none absolute top-[-160px] left-1/2 -translate-x-1/2 w-[900px] h-[360px] bg-[#35D6E8]/[0.04] rounded-full blur-[140px]" />
-      <div className="pointer-events-none absolute top-[25%] right-[-100px] w-[500px] h-[350px] bg-[#8B7CFF]/[0.03] rounded-full blur-[140px]" />
+    <div className="min-h-screen flex flex-col bg-[#0B1220] text-[#F8FAFC] relative overflow-x-clip selection:bg-[#FF6A00]/20 selection:text-[#FF6A00]">
+      {/* Subtle top atmospheric glow (Vibrant Orange & Electric Blue) */}
+      <div className="pointer-events-none absolute top-[-160px] left-1/2 -translate-x-1/2 w-[900px] h-[360px] bg-[#38BDF8]/[0.025] rounded-full blur-[140px]" />
+      <div className="pointer-events-none absolute top-[25%] right-[-100px] w-[500px] h-[350px] bg-[#FF6A00]/[0.015] rounded-full blur-[140px]" />
 
       {/* Subtle modern dot grid */}
-      <div className="pointer-events-none absolute inset-0 bg-dots-subtle opacity-15 [mask-image:radial-gradient(ellipse_at_center,white_30%,transparent_80%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-dots-subtle opacity-20 [mask-image:radial-gradient(ellipse_at_center,white_30%,transparent_80%)]" />
 
       {/* Global Command Palette (Cmd+K) */}
       <CommandPalette isOpen={paletteOpen} onClose={() => setPaletteOpen(false)} />

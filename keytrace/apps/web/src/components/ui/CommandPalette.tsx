@@ -216,16 +216,16 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-[#080B12]/80 backdrop-blur-md animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-[#0B1220]/80 backdrop-blur-md animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xl bg-[#111927] border border-[#243247] rounded-2xl shadow-2xl overflow-hidden text-[#F4F7FC] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-xl bg-[#111B2E] border border-[#263B5E] rounded-[14px] shadow-2xl overflow-hidden text-[#F8FAFC] animate-in zoom-in-95 duration-150 motion-reduce:animate-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="flex items-center px-4 py-3.5 border-b border-[#243247] gap-3 bg-[#0D1320]/60">
-          <Search className="w-5 h-5 text-[#35D6E8]" />
+        <div className="flex items-center px-4 py-3.5 border-b border-[#263B5E] gap-3 bg-[#0B1220]/60">
+          <Search className="w-5 h-5 text-[#38BDF8]" />
           <input
             ref={inputRef}
             type="text"
@@ -233,17 +233,17 @@ export function CommandPalette({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command or navigate... (e.g. 'Verification', 'Live Monitor', 'Docs')"
-            className="w-full bg-transparent border-0 outline-none text-[#F4F7FC] placeholder-[#94A3B8]/60 text-sm"
+            className="w-full bg-transparent border-0 outline-none text-[#F8FAFC] placeholder-[#64748B] text-sm"
           />
-          <kbd className="hidden sm:inline-block text-[10px] font-mono uppercase bg-[#172235] text-[#94A3B8] border border-[#243247] px-2 py-0.5 rounded-md">
+          <kbd className="hidden sm:inline-block text-[10px] font-mono uppercase bg-[#1A2A44] text-[#94A3B8] border border-[#263B5E] px-2 py-0.5 rounded-[6px]">
             Esc
           </kbd>
         </div>
 
         {/* Command List */}
-        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-[#243247]/40">
+        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-[#263B5E]/40">
           {filteredCommands.length === 0 ? (
-            <div className="py-8 text-center text-sm text-[#94A3B8]">
+            <div className="py-8 text-center text-sm text-[#64748B]">
               No commands matching &ldquo;{query}&rdquo;
             </div>
           ) : (
@@ -256,28 +256,24 @@ export function CommandPalette({
                     key={cmd.id}
                     onClick={() => cmd.action()}
                     onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all text-xs ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all duration-150 motion-reduce:transition-none text-xs ${
                       isSelected
-                        ? "bg-[#172235] text-[#35D6E8] border border-[#35D6E8]/30 shadow-sm"
-                        : "text-[#F4F7FC] hover:bg-[#172235]/60 border border-transparent"
+                        ? "bg-[#1A2A44] text-[#FF6A00] border border-[#FF6A00]/40 shadow-sm"
+                        : "text-[#F8FAFC] hover:bg-[#1A2A44]/60 border border-transparent"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
-                        className={`p-1.5 rounded-lg border ${
+                        className={`p-1.5 rounded-[8px] border ${
                           isSelected
-                            ? "bg-[#35D6E8]/10 border-[#35D6E8]/40 text-[#35D6E8]"
-                            : "bg-[#0D1320] border-[#243247] text-[#94A3B8]"
+                            ? "bg-[#FF6A00]/10 border-[#FF6A00]/40 text-[#FF6A00]"
+                            : "bg-[#0B1220] border-[#263B5E] text-[#94A3B8]"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="truncate">
-                        <div
-                          className={`font-medium ${
-                            isSelected ? "text-[#F4F7FC]" : "text-[#F4F7FC]"
-                          }`}
-                        >
+                        <div className="font-medium text-[#F8FAFC]">
                           {cmd.title}
                         </div>
                         <div className="text-[11px] text-[#94A3B8] truncate">
@@ -287,14 +283,14 @@ export function CommandPalette({
                     </div>
                     <div className="flex items-center gap-1.5 text-[#94A3B8] shrink-0 ml-2">
                       {cmd.group === "actions" && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#35D6E8]/10 text-[#35D6E8] border border-[#35D6E8]/20 font-mono">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/20 font-mono">
                           Action
                         </span>
                       )}
                       <ArrowRight
                         className={`w-3.5 h-3.5 transition-transform ${
                           isSelected
-                            ? "text-[#35D6E8] translate-x-0.5"
+                            ? "text-[#FF6A00] translate-x-0.5"
                             : "opacity-0"
                         }`}
                       />
@@ -307,12 +303,12 @@ export function CommandPalette({
         </div>
 
         {/* Footer info bar */}
-        <div className="px-4 py-2 border-t border-[#243247] bg-[#0D1320]/80 flex items-center justify-between text-[11px] text-[#94A3B8]">
+        <div className="px-4 py-2 border-t border-[#263B5E] bg-[#0B1220]/80 flex items-center justify-between text-[11px] text-[#94A3B8]">
           <div className="flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-[#35D6E8]" />
-            <span>OBSIDIAN PULSE Command Center</span>
+            <Terminal className="w-3.5 h-3.5 text-[#FF6A00]" />
+            <span>KEYTRACE Command Center</span>
           </div>
-          <div className="flex items-center gap-3 font-mono text-[10px]">
+          <div className="flex items-center gap-3 font-mono text-[10px] text-[#64748B]">
             <span>↑↓ to navigate</span>
             <span>↵ to select</span>
           </div>

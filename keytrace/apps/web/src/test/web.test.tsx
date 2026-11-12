@@ -110,5 +110,20 @@ describe("KEYTRACE Frontend Component Test Suite", () => {
         screen.getByText(/Pasting is disallowed. Behavioural dynamics requires physical keystroke transitions./i)
       ).toBeInTheDocument();
     });
+    it("renders natural typing mode with comfortable free-text instruction and subtitle", () => {
+      const handleComplete = vi.fn();
+      render(<KeystrokeCaptureField mode="natural" onSessionComplete={handleComplete} />);
+
+      expect(screen.getByText("NATURAL TYPING MODE")).toBeInTheDocument();
+      expect(
+        screen.getByText("Build your behavioural identity through your natural typing rhythm.")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Type naturally about anything you like/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Zero Keylogging/i)
+      ).toBeInTheDocument();
+    });
   });
 });

@@ -126,7 +126,10 @@ verificationRouter.post(
       return;
     }
 
-    // Retrieve user's enrolled profile samples
+    // Retrieve user's enrolled profile and calibrated threshold
+    const profile = await TypingProfile.findOne({ userId: user._id });
+    const thresholdToUse = profile?.calibratedThreshold || ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD;
+
     const enrolledSamples = await TypingSample.find({
       userId: user._id,
       qualityStatus: { $ne: "rejected" },
@@ -140,7 +143,7 @@ verificationRouter.post(
     const mlResult = await mlClient.predict(
       featureVectors,
       currentFeatures,
-      ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD,
+      thresholdToUse,
       user._id.toString()
     );
 

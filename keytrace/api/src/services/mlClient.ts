@@ -86,7 +86,8 @@ export class MLClient {
   async buildAndSaveModel(
     userId: string,
     enrolledSamples: FeatureVector[],
-    threshold: number = 2.8
+    threshold: number = 2.8,
+    sampleTypes?: string[]
   ): Promise<MLBuildModelResult> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs * 2);
@@ -101,6 +102,7 @@ export class MLClient {
         body: JSON.stringify({
           user_id: userId,
           enrolled_samples: enrolledSamples,
+          sample_types: sampleTypes,
           threshold,
           force_rebuild: true,
         }),

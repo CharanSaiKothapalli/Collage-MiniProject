@@ -175,8 +175,8 @@ export const api = {
 
   // Enrolment
   enrollment: {
-    recordSample: (payload: KeystrokeSessionPayload) => request<{ ok: boolean; message?: string; count: number; required: number; features: any; profileStatus: string; qualityStatus: string; isModelBuilt?: boolean; modelTrainedAt?: string }>("/enrollment/sessions", { method: "POST", body: JSON.stringify(payload) }),
-    getStatus: () => request<{ ok: boolean; status: string; count: number; totalRecorded: number; required: number; isReady: boolean; isModelBuilt?: boolean; modelTrainedAt?: string; stabilityScore?: number; calibratedThreshold?: number }>("/enrollment/status"),
+    recordSample: (payload: KeystrokeSessionPayload) => request<{ ok: boolean; message?: string; count: number; calibrationCount?: number; naturalCount?: number; minCalibrationRequired?: number; minNaturalRequired?: number; stage?: string; required: number; features: any; profileStatus: string; qualityStatus: string; isModelBuilt?: boolean; modelTrainedAt?: string }>("/enrollment/sessions", { method: "POST", body: JSON.stringify(payload) }),
+    getStatus: () => request<{ ok: boolean; status: string; count: number; calibrationCount?: number; naturalCount?: number; minCalibrationRequired?: number; minNaturalRequired?: number; stage?: string; totalRecorded: number; required: number; isReady: boolean; isModelBuilt?: boolean; modelTrainedAt?: string; stabilityScore?: number; calibratedThreshold?: number }>("/enrollment/status"),
     getSamples: () => request<{ ok: boolean; samples: any[] }>("/enrollment/samples"),
     deleteSample: (sampleId: string) => request<{ ok: boolean; remainingCount: number; profileStatus: string; isModelBuilt?: boolean }>(`/enrollment/samples/${sampleId}`, { method: "DELETE" }),
     finalize: () => request<{ ok: boolean; profileStatus: string; buildResult?: any }>("/enrollment/finalize", { method: "POST" }),

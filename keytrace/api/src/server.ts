@@ -14,6 +14,7 @@ import { VerificationEvent } from "./models/VerificationEvent.js";
 import { ModelRegistry } from "./models/ModelRegistry.js";
 import { hashPassword } from "./utils/security.js";
 import { logAuditEvent } from "./services/auditService.js";
+import { mlClient } from "./services/mlClient.js";
 import { USER_ROLE, PROFILE_STATUS, CONSENT_STATUS, VERIFICATION_DECISION } from "@keytrace/shared";
 
 let memoryServer: any = null;
@@ -170,7 +171,10 @@ async function bootstrapInitialAdmin(): Promise<void> {
   const { username, email, password } = config.adminBootstrap;
   const passwordHash = await hashPassword(password);
 
+  const adminId = new mongoose.Types.ObjectId("6af023f91441f4f308023510");
+
   const admin = await User.create({
+    _id: adminId,
     username,
     email: email.toLowerCase(),
     passwordHash,
@@ -179,18 +183,64 @@ async function bootstrapInitialAdmin(): Promise<void> {
     hasConsent: true,
   });
 
-  await ConsentRecord.create({
+  const consent = await ConsentRecord.create({
     userId: admin._id,
     consentVersion: "1.0",
     status: CONSENT_STATUS.ACCEPTED,
     timestamp: new Date(),
   });
 
-  await TypingProfile.create({
+  const adminProfile = await TypingProfile.create({
     userId: admin._id,
     status: PROFILE_STATUS.READY_FOR_TESTING,
     enrollmentCount: 10,
+    calibrationCount: 5,
+    naturalCount: 5,
+    enrollmentStage: "complete",
+    isModelBuilt: true,
+    calibratedThreshold: 2.2,
+    stabilityScore: 95.5,
+    modelTrainedAt: new Date(),
   });
+
+  for (let i = 0; i < 10; i++) {
+    const variance = (i % 3) * 2;
+    await TypingSample.create({
+      userId: admin._id,
+      profileId: adminProfile._id,
+      sampleType: i < 5 ? "calibration" : "natural",
+      featureSchemaVersion: "1.0",
+      qualityStatus: "valid",
+      sessionId: crypto.randomUUID(),
+      consentReference: consent._id,
+      featureVector: {
+        mean_hold: 110 + variance,
+        std_hold: 15,
+        median_hold: 108 + variance,
+        mean_flight: 155 + variance * 2,
+        std_flight: 25,
+        median_flight: 150 + variance * 2,
+        p90_flight: 190 + variance,
+        chars_per_second: Number((4.5 + variance * 0.1).toFixed(2)),
+        pause_ratio: 0.15,
+        hold_flight_ratio: 0.71,
+      },
+      createdAt: new Date(Date.now() - (10 - i) * 3600000),
+    });
+  }
+
+  // Ensure model artifact exists on disk
+  try {
+    const samples = await TypingSample.find({ userId: admin._id });
+    await mlClient.buildAndSaveModel(
+      admin._id.toString(),
+      samples.map((s) => s.featureVector),
+      2.2,
+      samples.map((s) => s.sampleType)
+    );
+  } catch (err: any) {
+    logger.warn({ err: err.message }, "Could not build bootstrap admin model on startup");
+  }
 
   await logAuditEvent({
     actorId: admin._id,
@@ -198,10 +248,10 @@ async function bootstrapInitialAdmin(): Promise<void> {
     action: "ADMIN_BOOTSTRAP_INITIALIZED",
     resourceType: "User",
     resourceId: admin._id.toString(),
-    metadata: { note: "Initial secure administrative bootstrap created" },
+    metadata: { note: "Initial secure administrative bootstrap created with enrolled baseline" },
   });
 
-  logger.info({ username: admin.username, email: admin.email }, "Bootstrap Administrator account created.");
+  logger.info({ username: admin.username, email: admin.email }, "Bootstrap Administrator account created with enrolled baseline.");
 }
 
 async function bootstrapDemoAccounts(): Promise<void> {
@@ -231,6 +281,10 @@ async function bootstrapDemoAccounts(): Promise<void> {
     userId: alice._id,
     status: PROFILE_STATUS.READY_FOR_TESTING,
     enrollmentCount: 10,
+    calibrationCount: 5,
+    naturalCount: 5,
+    enrollmentStage: "complete",
+    isModelBuilt: true,
   });
 
   for (let i = 0; i < 10; i++) {
@@ -238,6 +292,7 @@ async function bootstrapDemoAccounts(): Promise<void> {
     await TypingSample.create({
       userId: alice._id,
       profileId: aliceProfile._id,
+      sampleType: i < 5 ? "calibration" : "natural",
       featureSchemaVersion: "1.0",
       qualityStatus: "valid",
       sessionId: crypto.randomUUID(),
@@ -300,12 +355,17 @@ async function bootstrapDemoAccounts(): Promise<void> {
     userId: bob._id,
     status: PROFILE_STATUS.READY_FOR_TESTING,
     enrollmentCount: 10,
+    calibrationCount: 5,
+    naturalCount: 5,
+    enrollmentStage: "complete",
+    isModelBuilt: true,
   });
 
   for (let i = 0; i < 10; i++) {
     await TypingSample.create({
       userId: bob._id,
       profileId: bobProfile._id,
+      sampleType: i < 5 ? "calibration" : "natural",
       featureSchemaVersion: "1.0",
       qualityStatus: "valid",
       sessionId: crypto.randomUUID(),

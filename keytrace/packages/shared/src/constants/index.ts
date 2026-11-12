@@ -76,9 +76,29 @@ export const FEATURE_METADATA: Record<FeatureName, { label: string; unit: string
   },
 };
 
+export const SAMPLE_TYPE = {
+  CALIBRATION: "calibration",
+  NATURAL: "natural",
+  VERIFICATION: "verification",
+} as const;
+
+export type SampleType = (typeof SAMPLE_TYPE)[keyof typeof SAMPLE_TYPE];
+
+export const ENROLLMENT_STAGE = {
+  CALIBRATION: "calibration",
+  NATURAL: "natural",
+  COMPLETE: "complete",
+} as const;
+
+export type EnrollmentStageType = (typeof ENROLLMENT_STAGE)[keyof typeof ENROLLMENT_STAGE];
+
 export const ENROLLMENT_THRESHOLDS = {
+  MIN_CALIBRATION_SAMPLES: 5,
+  MIN_NATURAL_SAMPLES: 5,
   MIN_SAMPLES_REQUIRED: 10,
   MIN_OBSERVATIONS_PER_SAMPLE: 8,
+  MIN_OBSERVATIONS_PER_CALIBRATION: 8,
+  MIN_OBSERVATIONS_PER_NATURAL: 15,
   MIN_ELAPSED_MS: 1500,
   MAX_ELAPSED_MS: 180000,
   MIN_HOLD_MS: 10,

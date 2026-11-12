@@ -16,7 +16,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-medium text-zinc-300">
+          <label htmlFor={inputId} className="text-xs font-medium text-[#94A3B8]">
             {label}
           </label>
         )}
@@ -25,12 +25,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-xl bg-zinc-950/60 border text-sm text-zinc-100 placeholder:text-zinc-500 transition-all duration-200 focus:outline-none focus:ring-2 backdrop-blur-sm shadow-inner",
+              "w-full h-10 px-3.5 py-2 rounded-[10px] bg-[#0B1220] border text-sm text-[#F8FAFC] placeholder:text-[#64748B] transition-all duration-150 motion-reduce:transition-none focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed",
               rightElement && "pr-11",
               mono ? "font-mono" : "font-sans",
               error
-                ? "border-rose-500/80 focus:border-rose-500 focus:ring-rose-500/20"
-                : "border-white/10 focus:border-indigo-500/80 focus:ring-indigo-500/20 hover:border-white/20",
+                ? "border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/20"
+                : "border-[#263B5E] hover:border-[#38BDF8]/40 focus:border-[#FF6A00] focus:ring-[#FF6A00]/20",
               className
             )}
             {...props}
@@ -42,11 +42,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error ? (
-          <span className="text-xs text-rose-400 flex items-center gap-1 font-medium">
+          <span className="text-xs text-[#EF4444] flex items-center gap-1 font-medium">
             <span>•</span> {error}
           </span>
         ) : helperText ? (
-          <span className="text-xs text-zinc-500">{helperText}</span>
+          <span className="text-xs text-[#64748B]">{helperText}</span>
         ) : null}
       </div>
     );

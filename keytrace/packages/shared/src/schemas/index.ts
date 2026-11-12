@@ -27,6 +27,7 @@ export const KeystrokeObservationSchema = z.object({
 export const KeystrokeSessionPayloadSchema = z.object({
   schemaVersion: z.number().int().default(1),
   sessionId: z.string().uuid("Invalid session UUID format"),
+  sampleType: z.enum(["calibration", "natural", "verification"]).default("calibration"),
   elapsedMs: z
     .number()
     .min(ENROLLMENT_THRESHOLDS.MIN_ELAPSED_MS, "Session elapsed time is too short")

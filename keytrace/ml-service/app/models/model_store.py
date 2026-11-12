@@ -56,12 +56,23 @@ def load_user_model(user_id: str) -> Optional[Dict[str, Any]]:
 def build_and_save_user_model(
     user_id: str,
     enrolled_samples: List[Dict[str, float]],
-    threshold: float = 2.8
+    threshold: float = 2.8,
+    sample_types: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """
     Completely trains, calibrates, and serializes a user's keystroke biometric model.
     Saves the artifact to disk (.joblib) and caches it in memory.
     Subsequent predictions will load directly from this model rather than re-running training.
+
+    HYBRID CALIBRATION METHODOLOGY:
+    - Combines Stage 1 (Reference Calibration) and Stage 2 (Natural Free-Typing).
+    - Biomechanical hold times (mean_hold, std_hold, median_hold) remain stable across both
+      controlled transcription and free-typing. They are anchored using the pooled distribution.
+    - Flight and cadence times (mean_flight, std_flight, median_flight, p90_flight, chars_per_second,
+      pause_ratio, hold_flight_ratio) reflect cognitive pauses during spontaneous typing.
+      When natural typing samples are present, the flight medians and MAD scale explicitly accommodate
+      natural typing variance (scale = max(MAD_hybrid, MAD_natural)), preventing false rejections
+      during spontaneous verification while tightly binding physical key-hold dynamics.
     """
     if not enrolled_samples:
         raise ValueError("Cannot build model: enrolled samples list is empty.")
@@ -69,11 +80,43 @@ def build_and_save_user_model(
     X = np.asarray([feature_dict_to_vector(s) for s in enrolled_samples], dtype=np.float64)
     sample_count = len(enrolled_samples)
 
+    calibration_indices = []
+    natural_indices = []
+    if sample_types and len(sample_types) == sample_count:
+        for idx, st in enumerate(sample_types):
+            if st == "natural":
+                natural_indices.append(idx)
+            else:
+                calibration_indices.append(idx)
+    else:
+        calibration_indices = list(range(sample_count))
+
+    calibration_count = len(calibration_indices)
+    natural_count = len(natural_indices)
+    enrollment_type = "hybrid" if (calibration_count > 0 and natural_count > 0) else "calibration"
+
     # 1. Calibrate robust baseline spatial vectors (Median + MAD)
+    # Global / Hybrid median and MAD
     med = np.median(X, axis=0)
     mad = np.median(np.abs(X - med), axis=0)
     floor = np.maximum(np.abs(med) * 0.05, 1.0)
     scale = np.maximum(1.4826 * mad, floor)
+
+    # If hybrid enrollment (both calibration and natural samples present)
+    if calibration_count > 0 and natural_count > 0:
+        X_cal = X[calibration_indices]
+        X_nat = X[natural_indices]
+
+        # Natural typing flight features: indices [3, 4, 5, 6, 7, 8, 9]
+        med_nat = np.median(X_nat, axis=0)
+        mad_nat = np.median(np.abs(X_nat - med_nat), axis=0)
+
+        # For flight dimensions: center near natural median and ensure scale accommodates spontaneous natural pauses
+        flight_indices = [3, 4, 5, 6, 7, 8, 9]
+        for f_idx in flight_indices:
+            med[f_idx] = med_nat[f_idx]
+            nat_scale = max(1.4826 * mad_nat[f_idx], floor[f_idx])
+            scale[f_idx] = max(scale[f_idx], nat_scale)
 
     # 2. Compute empirical distances on the training set
     training_distances = []
@@ -108,6 +151,9 @@ def build_and_save_user_model(
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "trained_at": datetime.utcnow().isoformat() + "Z",
         "sample_count": sample_count,
+        "calibration_count": calibration_count,
+        "natural_count": natural_count,
+        "enrollment_type": enrollment_type,
         "feature_names": FEATURE_NAMES,
         "median_vector": med,
         "scale_vector": scale,
@@ -129,7 +175,16 @@ def build_and_save_user_model(
     joblib.dump(model_artifact, path, compress=3)
     logger.info(f"Successfully serialized and saved model for user {user_id} at {path}")
 
-    # 6. Cache in memory
+    # 6. Verify model loading from disk to ensure serialization integrity
+    try:
+        verify_artifact = joblib.load(path)
+        if not verify_artifact or "median_vector" not in verify_artifact:
+            raise ValueError("Serialized model artifact failed verification integrity check.")
+    except Exception as e:
+        logger.error(f"Integrity check failed loading saved model for user {user_id}: {str(e)}")
+        raise RuntimeError(f"Model serialization and loading verification failed: {str(e)}")
+
+    # 7. Cache in memory
     _MODEL_CACHE[user_id] = model_artifact
 
     return {
@@ -138,6 +193,9 @@ def build_and_save_user_model(
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "trained_at": model_artifact["trained_at"],
         "sample_count": sample_count,
+        "calibration_count": calibration_count,
+        "natural_count": natural_count,
+        "enrollment_type": enrollment_type,
         "saved_path": path,
         "threshold": float(threshold),
         "calibrated_threshold": round(calibrated_threshold, 2),
@@ -185,7 +243,8 @@ def predict_from_saved_model(
         except Exception as e:
             logger.warning(f"Error evaluating saved IsolationForest: {str(e)}")
 
-    eff_threshold = threshold if threshold is not None else model.get("threshold", 2.8)
+    calibrated_th = model.get("calibrated_threshold") or model.get("threshold", 2.8)
+    eff_threshold = calibrated_th if (threshold is None or threshold == 2.8) else threshold
 
     reason_codes = []
     quality_warnings = []
@@ -199,7 +258,11 @@ def predict_from_saved_model(
         reason_codes.append("Typing rhythm is consistent with enrolled behavioural baseline.")
     else:
         decision = "REVIEW"
-        reason_codes.append(f"Typing cadence distance ({score}) exceeds threshold ({eff_threshold}).")
+        reason_codes.append(
+            f"Typing cadence distance ({score}) exceeds threshold ({eff_threshold}). "
+            "Note: A REVIEW decision indicates behavioral deviation (e.g. fatigue, cadence shift, or pause variation) "
+            "rather than definitive proof of an imposter."
+        )
 
     if model["sample_count"] < 5:
         quality_warnings.append(
@@ -212,6 +275,7 @@ def predict_from_saved_model(
         "saved_path": get_model_path(user_id),
         "trained_at": model["trained_at"],
         "sample_count": model["sample_count"],
+        "calibrated_threshold": eff_threshold,
         "stability_score": model.get("training_metrics", {}).get("stability_score", 100.0)
     }
 
@@ -244,6 +308,9 @@ def get_saved_model_info(user_id: str) -> Optional[Dict[str, Any]]:
         "feature_schema_version": model["feature_schema_version"],
         "trained_at": model["trained_at"],
         "sample_count": model["sample_count"],
+        "calibration_count": model.get("calibration_count"),
+        "natural_count": model.get("natural_count"),
+        "enrollment_type": model.get("enrollment_type", "hybrid"),
         "threshold": model["threshold"],
         "calibrated_threshold": model.get("calibrated_threshold", model["threshold"]),
         "has_isolation_forest": model.get("isolation_forest") is not None,

@@ -132,3 +132,20 @@ def test_model_build_and_predict_api_routes():
     # Verify model no longer exists
     res_info2 = client.get(f"/api/v1/model/user/{user_id}")
     assert res_info2.json()["exists"] is False
+
+def test_hybrid_model_building():
+    user_id = "test_user_saved_model_123"
+    samples = get_dummy_samples(10)
+    sample_types = ["calibration"] * 5 + ["natural"] * 5
+
+    res = build_and_save_user_model(user_id, samples, threshold=2.8, sample_types=sample_types)
+    assert res["user_id"] == user_id
+    assert res["sample_count"] == 10
+    assert res["calibration_count"] == 5
+    assert res["natural_count"] == 5
+    assert res["enrollment_type"] == "hybrid"
+
+    info = get_saved_model_info(user_id)
+    assert info["enrollment_type"] == "hybrid"
+    assert info["calibration_count"] == 5
+    assert info["natural_count"] == 5

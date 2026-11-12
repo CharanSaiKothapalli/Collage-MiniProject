@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useMemo } from "react";
 import { cn } from "../../lib/utils.js";
 import { Button } from "../ui/Button.js";
 import {
@@ -7,10 +7,23 @@ import {
   ENROLLMENT_THRESHOLDS,
   CURRENT_CONSENT_VERSION,
 } from "@keytrace/shared";
-import { ShieldCheck, AlertCircle, RefreshCw, Activity, Clock, Hash, Zap } from "lucide-react";
+import {
+  ShieldCheck,
+  AlertCircle,
+  RefreshCw,
+  Activity,
+  Clock,
+  Hash,
+  Zap,
+  Pause,
+  Play,
+  Sparkles,
+  Gauge,
+} from "lucide-react";
 
 interface KeystrokeCaptureFieldProps {
   onSessionComplete: (payload: KeystrokeSessionPayload) => Promise<void> | void;
+  mode?: "calibration" | "natural";
   targetPromptText?: string;
   minObservations?: number;
   isSubmitting?: boolean;
@@ -20,16 +33,32 @@ interface KeystrokeCaptureFieldProps {
 
 export function KeystrokeCaptureField({
   onSessionComplete,
+  mode = "calibration",
   targetPromptText = "The quick brown fox jumps over the lazy dog to verify behavioral biometric typing dynamics.",
-  minObservations = ENROLLMENT_THRESHOLDS.MIN_OBSERVATIONS_PER_SAMPLE,
+  minObservations,
   isSubmitting = false,
-  buttonLabel = "Submit Sample",
-  placeholder = "Click here and type the prompt above at your natural cadence...",
+  buttonLabel,
+  placeholder,
 }: KeystrokeCaptureFieldProps) {
+  // Determine effective minimum observations based on mode
+  const effectiveMinObs =
+    minObservations ??
+    (mode === "natural"
+      ? ENROLLMENT_THRESHOLDS.MIN_OBSERVATIONS_PER_NATURAL
+      : ENROLLMENT_THRESHOLDS.MIN_OBSERVATIONS_PER_SAMPLE);
+
+  const defaultPlaceholder =
+    mode === "natural"
+      ? "Type naturally about anything you like (e.g. your day, thoughts, hobbies, or recent work)... There is no predefined text. Don't worry about spelling."
+      : "Click here and type the prompt above at your natural cadence...";
+
+  const effectivePlaceholder = placeholder ?? defaultPlaceholder;
+  const effectiveButtonLabel = buttonLabel ?? (mode === "natural" ? "Capture Natural Sample" : "Submit Sample");
+
   const [typedDisplay, setTypedDisplay] = useState("");
   const [observations, setObservations] = useState<KeystrokeObservation[]>([]);
   const [pasteWarning, setPasteWarning] = useState(false);
-  const [, setSessionStartTime] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Live telemetry metrics
   const [currentHoldMs, setCurrentHoldMs] = useState<number | null>(null);
@@ -40,6 +69,8 @@ export function KeystrokeCaptureField({
   const lastDownTime = useRef<number | null>(null);
   const observationsRef = useRef<KeystrokeObservation[]>([]);
   const startTimeRef = useRef<number | null>(null);
+  const pauseStartTimeRef = useRef<number | null>(null);
+  const totalPausedDurationRef = useRef<number>(0);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
 
   // Reset buffers
@@ -48,16 +79,36 @@ export function KeystrokeCaptureField({
     lastDownTime.current = null;
     observationsRef.current = [];
     startTimeRef.current = null;
+    pauseStartTimeRef.current = null;
+    totalPausedDurationRef.current = 0;
     sessionIdRef.current = crypto.randomUUID();
     setTypedDisplay("");
     setObservations([]);
     setPasteWarning(false);
-    setSessionStartTime(null);
+    setIsPaused(false);
     setCurrentHoldMs(null);
     setCurrentFlightMs(null);
   }, []);
 
+  // Toggle pause/resume
+  const togglePause = useCallback(() => {
+    if (isPaused) {
+      // Resume
+      if (pauseStartTimeRef.current !== null) {
+        totalPausedDurationRef.current += performance.now() - pauseStartTimeRef.current;
+        pauseStartTimeRef.current = null;
+      }
+      setIsPaused(false);
+    } else {
+      // Pause
+      pauseStartTimeRef.current = performance.now();
+      setIsPaused(true);
+    }
+  }, [isPaused]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isPaused) return;
+
     // 1. Ignore auto-repeat events caused by holding a key down
     if (e.repeat) return;
 
@@ -68,7 +119,6 @@ export function KeystrokeCaptureField({
 
     if (startTimeRef.current === null) {
       startTimeRef.current = now;
-      setSessionStartTime(now);
     }
 
     // Flight time: interval between previous keydown and current keydown
@@ -83,6 +133,7 @@ export function KeystrokeCaptureField({
   };
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isPaused) return;
     if (["Shift", "Control", "Alt", "Meta", "CapsLock"].includes(e.key)) return;
 
     const now = performance.now();
@@ -107,21 +158,23 @@ export function KeystrokeCaptureField({
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    // Prevent pasted text from counting as valid typing samples
     e.preventDefault();
     setPasteWarning(true);
     setTimeout(() => setPasteWarning(false), 4000);
   };
 
   const handleSubmit = async () => {
-    if (observations.length < minObservations) return;
+    if (observations.length < effectiveMinObs || isPaused) return;
 
-    const elapsedMs = startTimeRef.current !== null ? Math.round(performance.now() - startTimeRef.current) : 3000;
+    const now = performance.now();
+    const rawElapsed = startTimeRef.current !== null ? now - startTimeRef.current : 3000;
+    const netElapsedMs = Math.round(rawElapsed - totalPausedDurationRef.current);
 
     const payload: KeystrokeSessionPayload = {
       schemaVersion: 1,
       sessionId: sessionIdRef.current,
-      elapsedMs: Math.max(elapsedMs, ENROLLMENT_THRESHOLDS.MIN_ELAPSED_MS),
+      sampleType: mode,
+      elapsedMs: Math.max(netElapsedMs, ENROLLMENT_THRESHOLDS.MIN_ELAPSED_MS),
       observations: [...observations],
       inputMethod: "keyboard",
       consentVersion: CURRENT_CONSENT_VERSION,
@@ -135,51 +188,105 @@ export function KeystrokeCaptureField({
     }
   };
 
-  const progressPercent = Math.min(100, Math.round((observations.length / minObservations) * 100));
-  const isReady = observations.length >= minObservations;
+  // Derived live statistics
+  const stats = useMemo(() => {
+    if (observations.length === 0) {
+      return { avgHold: null, avgFlight: null, cps: null };
+    }
+    const sumHold = observations.reduce((acc, curr) => acc + curr.holdMs, 0);
+    const sumFlight = observations.reduce((acc, curr) => acc + curr.flightMs, 0);
+    const avgHold = Math.round(sumHold / observations.length);
+    const avgFlight = Math.round(sumFlight / observations.length);
+
+    const rawElapsed = startTimeRef.current !== null ? performance.now() - startTimeRef.current : 0;
+    const netElapsedSec = Math.max(1, (rawElapsed - totalPausedDurationRef.current) / 1000);
+    const cps = Number((observations.length / netElapsedSec).toFixed(1));
+
+    return { avgHold, avgFlight, cps };
+  }, [observations, isPaused]);
+
+  const progressPercent = Math.min(100, Math.round((observations.length / effectiveMinObs) * 100));
+  const isReady = observations.length >= effectiveMinObs && !isPaused;
 
   return (
-    <div className="flex flex-col gap-3.5 w-full">
-      {/* Target prompt guidance box */}
-      <div className="bg-zinc-900/40 border border-white/[0.08] rounded-2xl p-4.5 relative backdrop-blur-xl">
-        <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-white/[0.06]">
-          <span className="text-xs font-medium text-zinc-300 flex items-center gap-1.5">
-            Reference Biometric Phrase
-          </span>
-          <span className="text-[11px] text-zinc-500 font-medium">
-            Type naturally at your normal speed
-          </span>
+    <div className="flex flex-col gap-4 w-full">
+      {/* Mode-specific guidance header */}
+      {mode === "calibration" ? (
+        <div className="bg-[#111B2E] border border-[#263B5E] rounded-2xl p-4.5 relative backdrop-blur-xl">
+          <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[#263B5E]/60">
+            <span className="text-xs font-semibold text-[#FF6A00] flex items-center gap-1.5 uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-[#FF6A00]" /> Stage 1: Reference Biometric Phrase
+            </span>
+            <span className="text-[11px] text-[#94A3B8] font-medium">
+              Calibrates baseline neuromuscular motor reflex
+            </span>
+          </div>
+          <p className="text-sm font-sans text-[#F8FAFC] leading-relaxed bg-[#0B1220]/80 p-3.5 rounded-xl border border-[#263B5E]/50 select-none shadow-inner">
+            {targetPromptText}
+          </p>
         </div>
-        <p className="text-sm font-sans text-zinc-100 leading-relaxed bg-zinc-950/70 p-3.5 rounded-xl border border-white/[0.06] select-none shadow-inner">
-          {targetPromptText}
-        </p>
-      </div>
+      ) : (
+        <div className="bg-[#111B2E] border border-[#263B5E] rounded-2xl p-4.5 relative backdrop-blur-xl">
+          <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[#263B5E]/60">
+            <div>
+              <span className="text-xs font-bold text-[#FF6A00] flex items-center gap-1.5 uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-[#FF6A00]" /> NATURAL TYPING MODE
+              </span>
+              <p className="text-xs text-[#94A3B8] mt-0.5 font-medium">
+                Build your behavioural identity through your natural typing rhythm.
+              </p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#FF6A00]/10 text-[#FF6A00] border border-[#FF6A00]/30">
+              Stage 2: Free-Text
+            </span>
+          </div>
+          <p className="text-xs font-sans text-[#94A3B8] leading-relaxed bg-[#0B1220]/80 p-3 rounded-xl border border-[#263B5E]/50">
+            Type naturally about anything you like. You can write about your day, studies, hobbies, or interests. There is no predefined sentence. Don’t worry about spelling or speed.
+          </p>
+        </div>
+      )}
 
       {/* Paste warning banner */}
       {pasteWarning && (
-        <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-xs text-rose-300">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="p-3.5 bg-[#EF4444]/10 border border-[#EF4444]/30 rounded-xl flex items-center gap-2 text-xs text-[#EF4444]">
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>[ALERT] Pasting is disallowed. Behavioural dynamics requires physical keystroke transitions.</span>
         </div>
       )}
 
-      {/* Dedicated timing capture input */}
+      {/* Dedicated timing capture input container */}
       <div className="relative">
         <textarea
-          rows={3}
+          rows={mode === "natural" ? 5 : 3}
           value={typedDisplay}
           onChange={(e) => setTypedDisplay(e.target.value)}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           onPaste={handlePaste}
-          placeholder={placeholder}
-          className="w-full bg-zinc-900/30 border border-white/10 focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/20 rounded-2xl p-4 text-sm font-sans text-zinc-100 placeholder:text-zinc-500 outline-none transition-all resize-none shadow-inner"
+          disabled={isPaused}
+          placeholder={isPaused ? "Capture paused. Click 'Resume' to continue typing." : effectivePlaceholder}
+          className={cn(
+            "w-full bg-[#0B1220] border rounded-2xl p-4 text-sm font-sans text-[#F8FAFC] placeholder:text-[#64748B] outline-none transition-all resize-none shadow-inner",
+            isPaused
+              ? "border-[#F59E0B]/40 opacity-70 cursor-not-allowed bg-[#0B1220]"
+              : "border-[#263B5E] focus:border-[#FF6A00] focus:ring-2 focus:ring-[#FF6A00]/20"
+          )}
         />
 
+        {/* Paused Overlay Indicator */}
+        {isPaused && (
+          <div className="absolute inset-0 bg-[#0B1220]/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center gap-2 pointer-events-none">
+            <div className="px-3 py-1.5 rounded-xl bg-[#F59E0B]/20 border border-[#F59E0B]/40 text-xs font-medium text-[#F59E0B] flex items-center gap-2">
+              <Pause className="w-3.5 h-3.5" />
+              <span>Capture Paused — Click Resume to continue your natural cadence</span>
+            </div>
+          </div>
+        )}
+
         {/* Live Keystroke Telemetry HUD */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-zinc-950/90 px-3 py-1.5 rounded-xl border border-white/10 text-xs font-mono text-zinc-300 backdrop-blur-xl shadow-sm pointer-events-none select-none">
+        <div className="absolute right-3 bottom-3 flex items-center gap-2.5 bg-[#111B2E]/95 px-3 py-1.5 rounded-xl border border-[#263B5E] text-xs font-mono text-[#F8FAFC] backdrop-blur-xl shadow-md pointer-events-none select-none">
           {/* Animated Cadence Waveform */}
-          <div className="hidden sm:flex items-end gap-1 h-4 px-1 border-r border-zinc-800 pr-2.5">
+          <div className="hidden sm:flex items-end gap-1 h-4 px-1 border-r border-[#263B5E] pr-2.5">
             {(observations.length > 0 ? observations.slice(-8) : [1, 2, 3, 4, 5, 6, 7, 8]).map((item, idx) => {
               const heightPercent =
                 typeof item === "number"
@@ -192,9 +299,9 @@ export function KeystrokeCaptureField({
                     "w-1 rounded-full transition-all duration-150",
                     observations.length > 0
                       ? idx % 2 === 0
-                        ? "bg-indigo-400"
-                        : "bg-sky-400"
-                      : "bg-zinc-800"
+                        ? "bg-[#FF6A00]"
+                        : "bg-[#38BDF8]"
+                      : "bg-[#263B5E]"
                   )}
                   style={{ height: `${heightPercent}%` }}
                 />
@@ -203,83 +310,139 @@ export function KeystrokeCaptureField({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-zinc-500">Hold:</span>
-            <span className={cn(currentHoldMs ? "text-zinc-100 font-semibold" : "text-zinc-600")}>
+            <Clock className="w-3.5 h-3.5 text-[#38BDF8]" />
+            <span className="text-[#94A3B8]">Hold:</span>
+            <span className={cn(currentHoldMs ? "text-[#F8FAFC] font-semibold" : "text-[#64748B]")}>
               {currentHoldMs ? `${currentHoldMs}ms` : "—"}
             </span>
           </div>
-          <div className="w-[1px] h-3.5 bg-zinc-800" />
+          <div className="w-[1px] h-3.5 bg-[#263B5E]" />
           <div className="flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-zinc-500">Flight:</span>
-            <span className={cn(currentFlightMs ? "text-zinc-100 font-semibold" : "text-zinc-600")}>
+            <Zap className="w-3.5 h-3.5 text-[#FF6A00]" />
+            <span className="text-[#94A3B8]">Flight:</span>
+            <span className={cn(currentFlightMs ? "text-[#F8FAFC] font-semibold" : "text-[#64748B]")}>
               {currentFlightMs ? `${currentFlightMs}ms` : "—"}
             </span>
           </div>
-          <div className="w-[1px] h-3.5 bg-zinc-800" />
+          <div className="w-[1px] h-3.5 bg-[#263B5E]" />
           <div className="flex items-center gap-1.5">
-            <Hash className="w-3.5 h-3.5 text-zinc-400" />
-            <span className="text-zinc-500">Obs:</span>
-            <span className="text-emerald-400 font-semibold">{observations.length}</span>
+            <Hash className="w-3.5 h-3.5 text-[#38BDF8]" />
+            <span className="text-[#94A3B8]">Obs:</span>
+            <span className={cn("font-semibold", observations.length >= effectiveMinObs ? "text-[#22C55E]" : "text-[#FF6A00]")}>
+              {observations.length}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Progress Bar & Actions */}
-      <div className="bg-zinc-900/40 border border-white/[0.08] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl">
-        <div className="w-full sm:w-1/2 flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-indigo-400" /> Sample Observations
-            </span>
-            <span className="text-zinc-400 font-mono text-[11px]">
-              {observations.length} / {minObservations} min required
-            </span>
+      {/* Live Sample Progress & Natural Typing Metrics Card */}
+      <div className="bg-[#111B2E] border border-[#263B5E] rounded-2xl p-4 flex flex-col gap-3.5 backdrop-blur-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="w-full sm:w-1/2 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#F8FAFC] font-medium flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5 text-[#FF6A00]" /> Keystroke Observations
+              </span>
+              <span className="text-[#94A3B8] font-mono text-[11px]">
+                {observations.length} / {effectiveMinObs} min required ({progressPercent}%)
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-[#0B1220] rounded-full border border-[#263B5E]/60 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full transition-all duration-200 rounded-full",
+                  isReady
+                    ? "bg-[#22C55E] shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+                    : "bg-[#FF6A00]"
+                )}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full h-1.5 bg-zinc-950 rounded-full border border-white/5 overflow-hidden">
-            <div
-              className={cn(
-                "h-full transition-all duration-200 rounded-full",
-                isReady
-                  ? "bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                  : "bg-indigo-500"
-              )}
-              style={{ width: `${progressPercent}%` }}
-            />
+
+          {/* Action buttons: Pause/Resume, Clear, Submit/Capture */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            {observations.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={togglePause}
+                disabled={isSubmitting}
+                className={cn(
+                  "text-xs px-2.5",
+                  isPaused
+                    ? "border-[#F59E0B]/50 text-[#F59E0B] hover:bg-[#F59E0B]/10"
+                    : "border-[#263B5E] text-[#94A3B8] hover:text-[#F8FAFC]"
+                )}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="w-3.5 h-3.5 mr-1 text-[#F59E0B]" /> Resume
+                  </>
+                ) : (
+                  <>
+                    <Pause className="w-3.5 h-3.5 mr-1" /> Pause
+                  </>
+                )}
+              </Button>
+            )}
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={resetSession}
+              disabled={observations.length === 0 || isSubmitting}
+              className="text-[#94A3B8] hover:text-[#F8FAFC] text-xs"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1" /> Clear
+            </Button>
+
+            <Button
+              type="button"
+              variant={isReady ? "primary" : "secondary"}
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!isReady || isSubmitting}
+              isLoading={isSubmitting}
+              className="text-xs"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 mr-1" /> {effectiveButtonLabel}
+            </Button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={resetSession}
-            disabled={observations.length === 0 || isSubmitting}
-            className="text-zinc-400 hover:text-white"
-          >
-            <RefreshCw className="w-3.5 h-3.5" /> Clear
-          </Button>
-
-          <Button
-            type="button"
-            variant={isReady ? "primary" : "secondary"}
-            size="sm"
-            onClick={handleSubmit}
-            disabled={!isReady || isSubmitting}
-            isLoading={isSubmitting}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" /> {buttonLabel}
-          </Button>
-        </div>
+        {/* Live Aggregated Statistics Row */}
+        {observations.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-[#263B5E]/60 text-xs font-mono">
+            <div className="p-2 rounded-xl bg-[#0B1220]/60 border border-[#263B5E]/50 flex flex-col gap-0.5">
+              <span className="text-[10px] text-[#94A3B8] uppercase">Mean Hold</span>
+              <span className="text-xs font-semibold text-[#F8FAFC]">
+                {stats.avgHold !== null ? `${stats.avgHold} ms` : "—"}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-[#0B1220]/60 border border-[#263B5E]/50 flex flex-col gap-0.5">
+              <span className="text-[10px] text-[#94A3B8] uppercase">Mean Flight</span>
+              <span className="text-xs font-semibold text-[#F8FAFC]">
+                {stats.avgFlight !== null ? `${stats.avgFlight} ms` : "—"}
+              </span>
+            </div>
+            <div className="p-2 rounded-xl bg-[#0B1220]/60 border border-[#263B5E]/50 flex flex-col gap-0.5">
+              <span className="text-[10px] text-[#94A3B8] uppercase">Cadence</span>
+              <span className="text-xs font-semibold text-[#38BDF8]">
+                {stats.cps !== null ? `${stats.cps} chars/s` : "—"}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Security Privacy Assurance */}
-      <div className="text-xs text-zinc-500 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+      <div className="text-xs text-[#94A3B8] flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse shrink-0" />
         <span>
-          Zero Keylogging: Typed characters are never logged or transmitted. Only millisecond timing intervals are processed.
+          Zero Keylogging: Typed characters are never logged or stored. Only millisecond timing intervals are processed.
         </span>
       </div>
     </div>

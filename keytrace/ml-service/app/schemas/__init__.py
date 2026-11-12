@@ -28,6 +28,7 @@ class FeatureVectorOutput(BaseModel):
 class BuildModelRequest(BaseModel):
     user_id: str = Field(..., description="Unique user identifier")
     enrolled_samples: List[FeatureVectorOutput] = Field(..., min_length=1, description="List of baseline feature vectors")
+    sample_types: Optional[List[str]] = Field(default=None, description="Optional sample type per vector ('calibration' or 'natural')")
     threshold: float = Field(default=2.8, gt=0, le=10.0, description="Baseline distance decision threshold")
     force_rebuild: bool = Field(default=False, description="Re-train and overwrite even if model already exists")
 
@@ -39,6 +40,9 @@ class BuildModelResponse(BaseModel):
     feature_schema_version: str
     trained_at: str
     sample_count: int
+    calibration_count: Optional[int] = None
+    natural_count: Optional[int] = None
+    enrollment_type: Optional[str] = "hybrid"
     saved_path: str
     threshold: float
     calibrated_threshold: float
@@ -52,6 +56,9 @@ class SavedModelInfoResponse(BaseModel):
     feature_schema_version: Optional[str] = None
     trained_at: Optional[str] = None
     sample_count: Optional[int] = None
+    calibration_count: Optional[int] = None
+    natural_count: Optional[int] = None
+    enrollment_type: Optional[str] = None
     threshold: Optional[float] = None
     calibrated_threshold: Optional[float] = None
     has_isolation_forest: Optional[bool] = None

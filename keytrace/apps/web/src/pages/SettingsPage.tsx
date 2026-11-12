@@ -118,14 +118,14 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-6 flex flex-col gap-8">
-      <div className="pb-5 border-b border-white/[0.08]">
-        <Badge variant="cyan" className="mb-2">
+      <div className="pb-5 border-b border-[#263B5E]">
+        <Badge variant="blue" className="mb-2">
           User Settings
         </Badge>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F8FAFC]">
           Account &amp; Data Management
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+        <p className="text-xs sm:text-sm text-[#94A3B8] mt-1">
           Manage your credentials, exercise your privacy rights, and export or delete biometric data.
         </p>
       </div>
@@ -134,53 +134,53 @@ export function SettingsPage() {
         <div
           className={`p-4 rounded-xl border flex items-center gap-3 text-xs backdrop-blur-md shadow-sm ${
             dataMsg.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-              : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+              ? "bg-[#22C55E]/10 border-[#22C55E]/30 text-[#22C55E]"
+              : "bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]"
           }`}
         >
           {dataMsg.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-[#22C55E]" />
           ) : (
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#EF4444]" />
           )}
           <span className="font-medium">{dataMsg.text}</span>
         </div>
       )}
 
       {/* Profile Overview */}
-      <Card elevated className="p-6 flex flex-col gap-4">
-        <CardTitle className="text-base flex items-center gap-2">
-          <User className="w-4 h-4 text-indigo-400" /> Account Identity
+      <Card elevated className="p-6 flex flex-col gap-4 bg-[#111B2E] border-[#263B5E]">
+        <CardTitle className="text-base flex items-center gap-2 text-[#F8FAFC]">
+          <User className="w-4 h-4 text-[#38BDF8]" /> Account Identity
         </CardTitle>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-white/[0.06]">
-            <span className="text-zinc-500 block text-[11px] font-sans">Username</span>
-            <span className="text-sm font-semibold text-zinc-100 mt-1 block font-mono">{user?.username}</span>
+          <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E]">
+            <span className="text-[#94A3B8] block text-[11px] font-sans">Username</span>
+            <span className="text-sm font-semibold text-[#F8FAFC] mt-1 block font-mono">{user?.username}</span>
           </div>
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-white/[0.06]">
-            <span className="text-zinc-500 block text-[11px] font-sans">Email Address</span>
-            <span className="text-sm font-semibold text-zinc-100 mt-1 block truncate font-mono">{user?.email}</span>
+          <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E]">
+            <span className="text-[#94A3B8] block text-[11px] font-sans">Email Address</span>
+            <span className="text-sm font-semibold text-[#F8FAFC] mt-1 block truncate font-mono">{user?.email}</span>
           </div>
-          <div className="p-3.5 rounded-xl bg-zinc-950/60 border border-white/[0.06]">
-            <span className="text-zinc-500 block text-[11px] font-sans">System Role</span>
-            <span className="text-sm font-semibold text-amber-400 mt-1 block uppercase font-mono">{user?.role}</span>
+          <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E]">
+            <span className="text-[#94A3B8] block text-[11px] font-sans">System Role</span>
+            <span className="text-sm font-semibold text-[#F59E0B] mt-1 block uppercase font-mono">{user?.role}</span>
           </div>
         </div>
       </Card>
 
       {/* Change Password Card */}
-      <Card elevated className="p-6 flex flex-col gap-5">
-        <CardTitle className="text-base flex items-center gap-2">
-          <KeyRound className="w-4 h-4 text-indigo-400" /> Change Password
+      <Card elevated className="p-6 flex flex-col gap-5 bg-[#111B2E] border-[#263B5E]">
+        <CardTitle className="text-base flex items-center gap-2 text-[#F8FAFC]">
+          <KeyRound className="w-4 h-4 text-[#38BDF8]" /> Change Password
         </CardTitle>
 
         {passwordMsg && (
           <div
             className={`p-3 rounded-xl border flex items-center gap-2 text-xs ${
               passwordMsg.type === "success"
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                : "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                ? "bg-[#22C55E]/10 border-[#22C55E]/30 text-[#22C55E]"
+                : "bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]"
             }`}
           >
             <span>{passwordMsg.text}</span>
@@ -219,11 +219,11 @@ export function SettingsPage() {
       </Card>
 
       {/* Privacy & Data Controls Card */}
-      <Card elevated className="p-6 flex flex-col gap-5">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Download className="w-4 h-4 text-indigo-400" /> Export Personal Telemetry (GDPR Art. 20)
+      <Card elevated className="p-6 flex flex-col gap-5 bg-[#111B2E] border-[#263B5E]">
+        <CardTitle className="text-base flex items-center gap-2 text-[#F8FAFC]">
+          <Download className="w-4 h-4 text-[#38BDF8]" /> Export Personal Telemetry (GDPR Art. 20)
         </CardTitle>
-        <CardDescription className="text-xs">
+        <CardDescription className="text-xs text-[#94A3B8]">
           Download a machine-readable JSON archive of your account metadata, consent records, enrolled timing feature vectors, and verification history.
         </CardDescription>
 
@@ -240,18 +240,18 @@ export function SettingsPage() {
       </Card>
 
       {/* Danger Zone Card */}
-      <Card elevated className="p-6 flex flex-col gap-5 border-rose-500/20 bg-rose-500/5">
-        <div className="flex items-center gap-2 text-rose-400">
+      <Card elevated className="p-6 flex flex-col gap-5 border-[#EF4444]/30 bg-[#EF4444]/5">
+        <div className="flex items-center gap-2 text-[#EF4444]">
           <ShieldAlert className="w-5 h-5" />
           <h3 className="text-base font-semibold">Danger Zone</h3>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-rose-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-[#EF4444]/20">
           <div>
-            <span className="text-sm font-semibold text-white block">
+            <span className="text-sm font-semibold text-[#F8FAFC] block">
               Delete Behavioral Profile
             </span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-[#94A3B8]">
               Purges all 10 enrolled timing samples while keeping your login credentials.
             </span>
           </div>
@@ -260,12 +260,12 @@ export function SettingsPage() {
           </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-rose-500/20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[#EF4444]/20">
           <div>
-            <span className="text-sm font-semibold text-white block">
+            <span className="text-sm font-semibold text-[#F8FAFC] block">
               Permanently Delete Account
             </span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-[#94A3B8]">
               Completely erases your user account, consent records, and authentication audit logs.
             </span>
           </div>

@@ -25,9 +25,7 @@ interface LiveBehaviouralMonitorProps {
   sampleCount: number;
 }
 
-interface KeystrokeEvent {
-  key: string;
-  code: string;
+interface KeystrokeTimingEvent {
   pressTime: number;
   releaseTime: number;
   holdTimeMs: number;
@@ -40,7 +38,7 @@ export function LiveBehaviouralMonitor({
   sampleCount,
 }: LiveBehaviouralMonitorProps) {
   const [typedText, setTypedText] = useState("");
-  const [events, setEvents] = useState<KeystrokeEvent[]>([]);
+  const [events, setEvents] = useState<KeystrokeTimingEvent[]>([]);
   const [currentHold, setCurrentHold] = useState<number | null>(null);
   const [currentFlight, setCurrentFlight] = useState<number | null>(null);
   const [authStatus, setAuthStatus] = useState<
@@ -59,7 +57,7 @@ export function LiveBehaviouralMonitor({
   const downTimes = useRef<Map<string, number>>(new Map());
   const lastDownTime = useRef<number | null>(null);
   const sessionStartTime = useRef<number | null>(null);
-  const eventsRef = useRef<KeystrokeEvent[]>([]);
+  const eventsRef = useRef<KeystrokeTimingEvent[]>([]);
 
   // Waveform animation loop
   useEffect(() => {
@@ -128,9 +126,7 @@ export function LiveBehaviouralMonitor({
       setCurrentHold(holdTimeMs);
 
       const flightTimeMs = currentFlight ?? 120;
-      const ev: KeystrokeEvent = {
-        key: e.key,
-        code: e.code,
+      const ev: KeystrokeTimingEvent = {
         pressTime,
         releaseTime: now,
         holdTimeMs,
@@ -165,6 +161,7 @@ export function LiveBehaviouralMonitor({
       const payload: KeystrokeSessionPayload = {
         schemaVersion: 1,
         sessionId: sessionIdRef.current,
+        sampleType: "natural",
         elapsedMs: sessionStartTime.current
           ? Math.max(1000, Math.round(performance.now() - sessionStartTime.current))
           : 5000,
@@ -269,20 +266,20 @@ export function LiveBehaviouralMonitor({
   return (
     <div
       id="live-monitor"
-      className="rounded-2xl bg-[#111927] border border-[#243247] p-6 lg:p-7 shadow-2xl relative overflow-hidden transition-all scroll-mt-20"
+      className="rounded-2xl bg-[#111B2E] border border-[#263B5E] p-6 lg:p-7 shadow-2xl relative overflow-hidden transition-all scroll-mt-28"
     >
       {/* Top Specular Line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#35D6E8]/30 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#38BDF8]/30 to-transparent pointer-events-none" />
 
       {/* Monitor Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#243247]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#263B5E]">
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#35D6E8] shrink-0">
-            <Zap className="w-4 h-4 text-[#35D6E8]" />
+          <div className="w-9 h-9 rounded-xl bg-[#0B1220] border border-[#263B5E] flex items-center justify-center text-[#38BDF8] shrink-0">
+            <Zap className="w-4 h-4 text-[#38BDF8]" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-[#35D6E8] bg-[#35D6E8]/10 border border-[#35D6E8]/20 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] uppercase font-mono tracking-wider text-[#38BDF8] bg-[#38BDF8]/10 border border-[#38BDF8]/20 px-2 py-0.5 rounded-full">
                 TELEMETRY ENGINE ACTIVE
               </span>
               <span className="text-xs text-[#94A3B8] font-mono">
@@ -291,7 +288,7 @@ export function LiveBehaviouralMonitor({
                   : `Enrolling: ${sampleCount}/10`}
               </span>
             </div>
-            <h2 className="text-lg font-bold text-[#F4F7FC] tracking-tight">
+            <h2 className="text-lg font-bold text-[#F8FAFC] tracking-tight">
               Live Behavioural Monitoring
             </h2>
             <p className="text-xs text-[#94A3B8]">
@@ -310,7 +307,7 @@ export function LiveBehaviouralMonitor({
               onClick={triggerBackendWindowEvaluation}
               isLoading={isVerifying}
               disabled={isVerifying}
-              className="text-[#35D6E8] border-[#35D6E8]/30 hover:bg-[#35D6E8]/10"
+              className="text-[#38BDF8] border-[#38BDF8]/30 hover:bg-[#38BDF8]/10"
             >
               <Sparkles className="w-3.5 h-3.5 mr-1" />
               Evaluate Window
@@ -323,7 +320,7 @@ export function LiveBehaviouralMonitor({
             size="xs"
             onClick={resetTelemetry}
             disabled={events.length === 0}
-            className="text-[#94A3B8] hover:text-[#F4F7FC]"
+            className="text-[#94A3B8] hover:text-[#F8FAFC]"
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset
           </Button>
@@ -339,22 +336,22 @@ export function LiveBehaviouralMonitor({
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           placeholder="Click here and type continuously to test live behavioral biometric telemetry in real-time..."
-          className="w-full bg-[#0D1320] border border-[#243247] focus:border-[#35D6E8] focus:ring-1 focus:ring-[#35D6E8]/30 rounded-xl p-4 text-xs font-mono text-[#F4F7FC] placeholder-[#94A3B8]/50 outline-none transition-all resize-none shadow-inner"
+          className="w-full bg-[#0B1220] border border-[#263B5E] focus:border-[#38BDF8] focus:ring-1 focus:ring-[#38BDF8]/30 rounded-xl p-4 text-xs font-mono text-[#F8FAFC] placeholder-[#64748B] outline-none transition-all resize-none shadow-inner"
         />
 
         {/* Floating Live Telemetry HUD Bar */}
-        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-[#111927]/95 px-3 py-1.5 rounded-lg border border-[#243247] text-xs font-mono backdrop-blur-md select-none pointer-events-none">
+        <div className="absolute right-3 bottom-3 flex items-center gap-3 bg-[#111B2E]/95 px-3 py-1.5 rounded-lg border border-[#263B5E] text-xs font-mono backdrop-blur-md select-none pointer-events-none">
           {/* Real-time Oscillating Waveform */}
-          <div className="flex items-end gap-0.5 h-4 px-1 border-r border-[#243247] pr-2.5">
+          <div className="flex items-end gap-0.5 h-4 px-1 border-r border-[#263B5E] pr-2.5">
             {waveformWave.slice(0, 12).map((val, idx) => (
               <div
                 key={idx}
                 className={`w-1 rounded-full transition-all duration-100 ${
                   events.length > 0
                     ? idx % 2 === 0
-                      ? "bg-[#35D6E8]"
-                      : "bg-[#8B7CFF]"
-                    : "bg-[#243247]"
+                      ? "bg-[#38BDF8]"
+                      : "bg-[#FF6A00]"
+                    : "bg-[#263B5E]"
                 }`}
                 style={{ height: `${(val / 36) * 100}%` }}
               />
@@ -362,28 +359,28 @@ export function LiveBehaviouralMonitor({
           </div>
 
           <div className="flex items-center gap-1.5 text-[#94A3B8]">
-            <Clock className="w-3 h-3 text-[#35D6E8]" />
+            <Clock className="w-3 h-3 text-[#38BDF8]" />
             <span className="text-[11px]">Hold:</span>
-            <span className="text-[#F4F7FC] font-semibold text-[11px]">
+            <span className="text-[#F8FAFC] font-semibold text-[11px]">
               {currentHold !== null ? `${currentHold}ms` : "—"}
             </span>
           </div>
 
-          <div className="w-[1px] h-3 bg-[#243247]" />
+          <div className="w-[1px] h-3 bg-[#263B5E]" />
 
           <div className="flex items-center gap-1.5 text-[#94A3B8]">
-            <Zap className="w-3 h-3 text-[#8B7CFF]" />
+            <Zap className="w-3 h-3 text-[#FF6A00]" />
             <span className="text-[11px]">Flight:</span>
-            <span className="text-[#F4F7FC] font-semibold text-[11px]">
+            <span className="text-[#F8FAFC] font-semibold text-[11px]">
               {currentFlight !== null ? `${currentFlight}ms` : "—"}
             </span>
           </div>
 
-          <div className="w-[1px] h-3 bg-[#243247]" />
+          <div className="w-[1px] h-3 bg-[#263B5E]" />
 
           <div className="flex items-center gap-1 text-[11px]">
             <span className="text-[#94A3B8]">Keys:</span>
-            <span className="text-[#32D6A0] font-bold">{events.length}</span>
+            <span className="text-[#22C55E] font-bold">{events.length}</span>
           </div>
         </div>
       </div>
@@ -391,12 +388,12 @@ export function LiveBehaviouralMonitor({
       {/* 6 Real-Time Telemetry Metric Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-5">
         {/* Metric 1: Typing Cadence */}
-        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+        <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col justify-between">
           <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
             Typing Cadence
           </span>
           <div className="mt-1.5">
-            <span className="text-lg font-bold text-[#F4F7FC]">
+            <span className="text-lg font-bold text-[#F8FAFC]">
               {telemetry.cadenceWpm !== null ? `${telemetry.cadenceWpm} WPM` : "N/A"}
             </span>
             <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -406,12 +403,12 @@ export function LiveBehaviouralMonitor({
         </div>
 
         {/* Metric 2: Mean Key Hold Duration */}
-        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+        <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col justify-between">
           <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
             Mean Key Hold
           </span>
           <div className="mt-1.5">
-            <span className="text-lg font-bold text-[#35D6E8]">
+            <span className="text-lg font-bold text-[#38BDF8]">
               {telemetry.meanHold !== null ? `${telemetry.meanHold} ms` : "N/A"}
             </span>
             <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -421,12 +418,12 @@ export function LiveBehaviouralMonitor({
         </div>
 
         {/* Metric 3: Mean Flight Duration */}
-        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+        <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col justify-between">
           <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
             Mean Flight Time
           </span>
           <div className="mt-1.5">
-            <span className="text-lg font-bold text-[#8B7CFF]">
+            <span className="text-lg font-bold text-[#FF6A00]">
               {telemetry.meanFlight !== null ? `${telemetry.meanFlight} ms` : "N/A"}
             </span>
             <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -436,12 +433,12 @@ export function LiveBehaviouralMonitor({
         </div>
 
         {/* Metric 4: Keystrokes Per Second */}
-        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+        <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col justify-between">
           <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
             Keystrokes / Sec
           </span>
           <div className="mt-1.5">
-            <span className="text-lg font-bold text-[#F4F7FC]">
+            <span className="text-lg font-bold text-[#F8FAFC]">
               {telemetry.kps !== null ? `${telemetry.kps} KPS` : "N/A"}
             </span>
             <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -451,7 +448,7 @@ export function LiveBehaviouralMonitor({
         </div>
 
         {/* Metric 5: Behavioural Deviation */}
-        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+        <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col justify-between">
           <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
             Deviation (D_M)
           </span>
@@ -461,10 +458,10 @@ export function LiveBehaviouralMonitor({
                 telemetry.deviation === null
                   ? "text-[#94A3B8]"
                   : telemetry.deviation <= 2.8
-                  ? "text-[#32D6A0]"
+                  ? "text-[#22C55E]"
                   : telemetry.deviation <= 4.0
-                  ? "text-[#FFBF55]"
-                  : "text-[#FF647C]"
+                  ? "text-[#F59E0B]"
+                  : "text-[#EF4444]"
               }`}
             >
               {telemetry.deviation !== null ? telemetry.deviation.toFixed(2) : "N/A"}
@@ -476,12 +473,12 @@ export function LiveBehaviouralMonitor({
         </div>
 
         {/* Metric 6: Verification Confidence */}
-        <div className="p-3.5 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col justify-between">
+        <div className="p-3.5 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col justify-between">
           <span className="text-[10px] text-[#94A3B8] uppercase font-mono tracking-wider">
             Confidence
           </span>
           <div className="mt-1.5">
-            <span className="text-lg font-bold text-[#32D6A0]">
+            <span className="text-lg font-bold text-[#22C55E]">
               {telemetry.confidencePercent !== null
                 ? `${telemetry.confidencePercent}%`
                 : "N/A"}
@@ -494,7 +491,7 @@ export function LiveBehaviouralMonitor({
       </div>
 
       {/* Live Status and Evaluation Banner */}
-      <div className="mt-4 p-3.5 rounded-xl bg-[#0D1320]/80 border border-[#243247] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div className="mt-4 p-3.5 rounded-xl bg-[#0B1220]/80 border border-[#263B5E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="text-[#94A3B8]">Authentication Status:</span>
@@ -503,7 +500,7 @@ export function LiveBehaviouralMonitor({
             ) : authStatus === "REVIEW" ? (
               <Badge variant="review">ANOMALOUS • NEEDS REVIEW</Badge>
             ) : authStatus === "EVALUATING" ? (
-              <Badge variant="cyan">EVALUATING RHYTHM...</Badge>
+              <Badge variant="blue">EVALUATING RHYTHM...</Badge>
             ) : authStatus === "CAPTURING" ? (
               <Badge variant="neutral">STREAMING TELEMETRY ({events.length} KEYS)</Badge>
             ) : (
@@ -516,7 +513,7 @@ export function LiveBehaviouralMonitor({
           <div className="flex items-center gap-3 font-mono text-[11px] text-[#94A3B8]">
             <span>
               Mahalanobis Distance:{" "}
-              <strong className="text-[#F4F7FC]">
+              <strong className="text-[#F8FAFC]">
                 {backendScore.toFixed(2)}
               </strong>
             </span>
@@ -525,8 +522,8 @@ export function LiveBehaviouralMonitor({
               <strong
                 className={
                   backendDecision === "MATCH"
-                    ? "text-[#32D6A0]"
-                    : "text-[#FFBF55]"
+                    ? "text-[#22C55E]"
+                    : "text-[#F59E0B]"
                 }
               >
                 {backendDecision}

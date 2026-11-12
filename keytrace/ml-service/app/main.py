@@ -101,7 +101,8 @@ def build_model(req: BuildModelRequest, _auth: bool = Depends(verify_internal_au
         build_result = build_and_save_user_model(
             user_id=req.user_id,
             enrolled_samples=enrolled_dicts,
-            threshold=req.threshold
+            threshold=req.threshold,
+            sample_types=req.sample_types
         )
         return BuildModelResponse(
             ok=True,
@@ -171,10 +172,11 @@ def predict(req: PredictRequest, _auth: bool = Depends(verify_internal_auth)):
             )
             if result is not None:
                 decision, score, deviations, reason_codes, warnings, anomaly, meta = result
+                eff_th = meta.get("calibrated_threshold", req.threshold)
                 return PredictResponse(
                     decision=decision,
                     score=score,
-                    threshold=req.threshold,
+                    threshold=eff_th,
                     model_version=MODEL_VERSION,
                     feature_schema_version=FEATURE_SCHEMA_VERSION,
                     reason_codes=reason_codes,
@@ -204,11 +206,12 @@ def predict(req: PredictRequest, _auth: bool = Depends(verify_internal_auth)):
             )
             if result is not None:
                 decision, score, deviations, reason_codes, warnings, anomaly, meta = result
+                eff_th = meta.get("calibrated_threshold", req.threshold)
                 reason_codes.append("Biometric model was built, calibrated, and saved to disk.")
                 return PredictResponse(
                     decision=decision,
                     score=score,
-                    threshold=req.threshold,
+                    threshold=eff_th,
                     model_version=MODEL_VERSION,
                     feature_schema_version=FEATURE_SCHEMA_VERSION,
                     reason_codes=reason_codes,

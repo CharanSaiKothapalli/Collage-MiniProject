@@ -78,81 +78,81 @@ export function ConsentPage() {
 
   return (
     <div className="max-w-3xl mx-auto py-6 flex flex-col gap-8">
-      <div className="flex flex-col gap-2 pb-5 border-b border-white/[0.08]">
+      <div className="flex flex-col gap-2 pb-5 border-b border-[#263B5E]">
         <div className="flex items-center gap-2">
-          <Badge variant="cyan">Policy v{CURRENT_CONSENT_VERSION}</Badge>
+          <Badge variant="blue">Policy v{CURRENT_CONSENT_VERSION}</Badge>
           {consentDetails?.hasConsent ? (
             <Badge variant="match">Consent Active</Badge>
           ) : (
             <Badge variant="review">Consent Required</Badge>
           )}
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F8FAFC]">
           Informed Behavioral Biometrics Consent
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400">
+        <p className="text-xs sm:text-sm text-[#94A3B8]">
           Please review the technical disclosures regarding how your keystroke timing observations are captured, processed, and safeguarded.
         </p>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+        <div className="p-4 bg-[#EF4444]/10 border border-[#EF4444]/20 rounded-xl text-xs text-[#EF4444] flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-[#EF4444]" />
           <span className="font-medium">{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+        <div className="p-4 bg-[#22C55E]/10 border border-[#22C55E]/20 rounded-xl text-xs text-[#22C55E] flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-[#22C55E]" />
           <span className="font-medium">{successMsg}</span>
         </div>
       )}
 
-      <Card elevated className="flex flex-col gap-6 p-6 sm:p-8">
+      <Card elevated className="flex flex-col gap-6 p-6 sm:p-8 bg-[#111B2E] border-[#263B5E]">
         {/* Core Principles */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-zinc-950/60 border border-white/[0.06] hover:border-white/10 transition-colors flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-white font-semibold text-sm">
-              <EyeOff className="w-4 h-4 text-indigo-400" /> 1. Zero Text Logging
+          <div className="p-4 rounded-xl bg-[#0B1220] border border-[#263B5E] hover:border-[#38BDF8]/40 transition-colors flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[#F8FAFC] font-semibold text-sm">
+              <EyeOff className="w-4 h-4 text-[#38BDF8]" /> 1. Zero Text Logging
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
               We never capture, log, or transmit typed characters, passwords, messages, or text content. The browser discards the text locally and records only millisecond intervals.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-950/60 border border-white/[0.06] hover:border-white/10 transition-colors flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-white font-semibold text-sm">
-              <Clock className="w-4 h-4 text-sky-400" /> 2. Timing Metrics Only
+          <div className="p-4 rounded-xl bg-[#0B1220] border border-[#263B5E] hover:border-[#38BDF8]/40 transition-colors flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[#F8FAFC] font-semibold text-sm">
+              <Clock className="w-4 h-4 text-[#FF6A00]" /> 2. Timing Metrics Only
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
               Only two physical measurements are gathered: key-hold duration (press-to-release) and inter-key flight time (press-to-press).
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-950/60 border border-white/[0.06] hover:border-white/10 transition-colors flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-white font-semibold text-sm">
-              <Sliders className="w-4 h-4 text-emerald-400" /> 3. Dedicated Input Only
+          <div className="p-4 rounded-xl bg-[#0B1220] border border-[#263B5E] hover:border-[#38BDF8]/40 transition-colors flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[#F8FAFC] font-semibold text-sm">
+              <Sliders className="w-4 h-4 text-[#22C55E]" /> 3. Dedicated Input Only
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
               Keystrokes are captured exclusively while you actively interact with the designated typing input component. There are no global keyboard listeners or background monitors.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-zinc-950/60 border border-white/[0.06] hover:border-white/10 transition-colors flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-white font-semibold text-sm">
-              <Lock className="w-4 h-4 text-amber-400" /> 4. Full Control &amp; Deletion
+          <div className="p-4 rounded-xl bg-[#0B1220] border border-[#263B5E] hover:border-[#38BDF8]/40 transition-colors flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[#F8FAFC] font-semibold text-sm">
+              <Lock className="w-4 h-4 text-[#F59E0B]" /> 4. Full Control &amp; Deletion
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
               You retain the right to withdraw consent, delete individual training samples, export your data in JSON format, or permanently purge your profile at any time.
             </p>
           </div>
         </div>
 
         {/* Limitations Disclosure */}
-        <div className="p-4 rounded-xl bg-zinc-950/80 border border-white/[0.08] flex flex-col gap-1.5 text-xs text-zinc-400">
-          <span className="font-semibold text-zinc-200 flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4 text-amber-400" /> Technical Limitations Notice
+        <div className="p-4 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col gap-1.5 text-xs text-[#94A3B8]">
+          <span className="font-semibold text-[#F8FAFC] flex items-center gap-1.5">
+            <AlertCircle className="w-4 h-4 text-[#F59E0B]" /> Technical Limitations Notice
           </span>
           <p className="leading-relaxed">
             Browser event timestamps do not equal laboratory hardware instrumentation. Operating system scheduling, input methods, and virtual mobile keyboards introduce timing jitter.
@@ -161,15 +161,15 @@ export function ConsentPage() {
         </div>
 
         {/* Action Controls */}
-        <div className="pt-4 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="pt-4 border-t border-[#263B5E] flex flex-col sm:flex-row items-center justify-between gap-4">
           <label className="flex items-center gap-3 cursor-pointer text-xs select-none">
             <input
               type="checkbox"
               checked={hasAgreed}
               onChange={(e) => setHasAgreed(e.target.checked)}
-              className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-indigo-500 focus:ring-indigo-500/30 accent-indigo-500 cursor-pointer"
+              className="w-4 h-4 rounded border-[#263B5E] bg-[#0B1220] text-[#FF6A00] focus:ring-[#FF6A00]/30 accent-[#FF6A00] cursor-pointer"
             />
-            <span className="text-zinc-300 font-medium">I explicitly consent to the collection of anonymized keystroke timing durations.</span>
+            <span className="text-[#94A3B8] font-medium">I explicitly consent to the collection of anonymized keystroke timing durations.</span>
           </label>
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
@@ -193,7 +193,7 @@ export function ConsentPage() {
               disabled={!hasAgreed || isLoading}
               isLoading={isLoading}
             >
-              <ShieldCheck className="w-4 h-4 mr-1 text-zinc-950" /> Accept Terms &amp; Continue
+              <ShieldCheck className="w-4 h-4 mr-1 text-[#0B1220]" /> Accept Terms &amp; Continue
             </Button>
           </div>
         </div>

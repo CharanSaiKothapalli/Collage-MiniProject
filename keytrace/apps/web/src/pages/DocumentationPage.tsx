@@ -61,14 +61,14 @@ export function DocumentationPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Banner */}
-      <div className="mb-8 border-b border-[#243247] pb-6">
+      <div className="mb-8 border-b border-[#263B5E] pb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="cyan">OFFICIAL DOCUMENTATION</Badge>
+              <Badge variant="blue">OFFICIAL DOCUMENTATION</Badge>
               <Badge variant="neutral">v1.2.0-STABLE</Badge>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F4F7FC]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F8FAFC]">
               KEYTRACE SYSTEM SPECIFICATION
             </h1>
             <p className="text-xs sm:text-sm text-[#94A3B8] font-mono mt-1">
@@ -81,16 +81,16 @@ export function DocumentationPage() {
               href="/api/docs"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#243247] bg-[#111927] text-xs font-mono text-[#94A3B8] hover:text-[#F4F7FC] hover:border-[#35D6E8] rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#263B5E] bg-[#111B2E] text-xs font-mono text-[#94A3B8] hover:text-[#F8FAFC] hover:border-[#38BDF8] rounded-lg transition-colors"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-[#35D6E8]" />
+              <ExternalLink className="w-3.5 h-3.5 text-[#38BDF8]" />
               <span>Swagger OpenAPI</span>
             </a>
             <a
               href="/health/ready"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#243247] bg-[#111927] text-xs font-mono text-[#32D6A0] hover:border-[#32D6A0] rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 border border-[#263B5E] bg-[#111B2E] text-xs font-mono text-[#22C55E] hover:border-[#22C55E] rounded-lg transition-colors"
             >
               <Activity className="w-3.5 h-3.5" />
               <span>Health Diagnostic</span>
@@ -112,13 +112,13 @@ export function DocumentationPage() {
                 placeholder="Search documentation..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#111927] border border-[#243247] text-xs font-mono text-[#F4F7FC] pl-8 pr-3 py-2 outline-none focus:border-[#35D6E8] placeholder-[#94A3B8]/60 rounded-xl"
+                className="w-full bg-[#111B2E] border border-[#263B5E] text-xs font-mono text-[#F8FAFC] pl-8 pr-3 py-2 outline-none focus:border-[#38BDF8] placeholder-[#94A3B8]/60 rounded-xl"
               />
             </div>
 
             {/* Navigation Menu */}
-            <div className="bg-[#111927] border border-[#243247] p-1.5 rounded-xl flex flex-col gap-1">
-              <div className="px-3 py-2 border-b border-[#243247] text-[10px] font-mono uppercase tracking-widest text-[#94A3B8] flex items-center justify-between">
+            <div className="bg-[#111B2E] border border-[#263B5E] p-1.5 rounded-xl flex flex-col gap-1">
+              <div className="px-3 py-2 border-b border-[#263B5E] text-[10px] font-mono uppercase tracking-widest text-[#94A3B8] flex items-center justify-between">
                 <span>INDEX TABLE</span>
                 <span>8 SECTIONS</span>
               </div>
@@ -131,15 +131,15 @@ export function DocumentationPage() {
                     onClick={() => setActiveSection(sec.id)}
                     className={`w-full text-left px-3 py-2 text-xs font-mono transition-colors flex items-center justify-between group rounded-lg ${
                       isActive
-                        ? "bg-[#172235] text-[#35D6E8] border-l-2 border-[#35D6E8]"
-                        : "text-[#94A3B8] hover:text-[#F4F7FC] hover:bg-[#172235]/60"
+                        ? "bg-[#1A2A44] text-[#FF6A00] border-l-2 border-[#FF6A00] font-semibold"
+                        : "text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1A2A44]/60"
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#35D6E8]" : "text-[#94A3B8]"}`} />
+                      <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#38BDF8]" : "text-[#94A3B8]"}`} />
                       <span className="truncate">{sec.title}</span>
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 border border-[#243247] text-[#94A3B8] rounded bg-[#0D1320] shrink-0">
+                    <span className="text-[10px] px-1.5 py-0.5 border border-[#263B5E] text-[#94A3B8] rounded bg-[#0B1220] shrink-0">
                       {sec.badge}
                     </span>
                   </button>
@@ -148,26 +148,26 @@ export function DocumentationPage() {
             </div>
 
             {/* Quick System Telemetry Card */}
-            <div className="bg-[#0D1320] border border-[#243247] p-4 rounded-xl text-[11px] font-mono text-[#94A3B8] flex flex-col gap-2">
-              <div className="text-[#94A3B8] uppercase tracking-widest text-[10px] pb-1 border-b border-[#243247] flex items-center justify-between">
+            <div className="bg-[#0B1220] border border-[#263B5E] p-4 rounded-xl text-[11px] font-mono text-[#94A3B8] flex flex-col gap-2">
+              <div className="text-[#94A3B8] uppercase tracking-widest text-[10px] pb-1 border-b border-[#263B5E] flex items-center justify-between">
                 <span>SYSTEM CONSTANTS</span>
-                <span className="text-[#32D6A0]">ACTIVE</span>
+                <span className="text-[#22C55E]">ACTIVE</span>
               </div>
               <div className="flex justify-between">
                 <span>Feature Dims:</span>
-                <span className="text-[#F4F7FC] font-bold">10 Dimensions</span>
+                <span className="text-[#F8FAFC] font-bold">10 Dimensions</span>
               </div>
               <div className="flex justify-between">
                 <span>Min Enrolment:</span>
-                <span className="text-[#F4F7FC] font-bold">{ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} Samples</span>
+                <span className="text-[#F8FAFC] font-bold">{ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} Samples</span>
               </div>
               <div className="flex justify-between">
                 <span>Decision Cutoff:</span>
-                <span className="text-[#35D6E8] font-bold">τ = {ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD}</span>
+                <span className="text-[#38BDF8] font-bold">τ = {ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD}</span>
               </div>
               <div className="flex justify-between">
                 <span>ML Microservice:</span>
-                <span className="text-[#8B7CFF] font-bold">FastAPI + sklearn</span>
+                <span className="text-[#FF6A00] font-bold">FastAPI + sklearn</span>
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ export function DocumentationPage() {
                   <Badge variant="cyan">SECTION 01</Badge>
                   <Badge variant="neutral">ARCHITECTURE</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   1. System Overview &amp; Topology
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -192,13 +192,13 @@ export function DocumentationPage() {
               </CardHeader>
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8] leading-relaxed">
-                <p className="text-[#F4F7FC]">
-                  <strong className="text-[#35D6E8]">KEYTRACE</strong> operates as a continuous biometric risk assessment engine. Rather than relying on intermittent authentication challenges (such as passwords or SMS OTP codes), KEYTRACE passively measures neuromuscular typing characteristics throughout an active user session.
+                <p className="text-[#F8FAFC]">
+                  <strong className="text-[#38BDF8]">KEYTRACE</strong> operates as a continuous biometric risk assessment engine. Rather than relying on intermittent authentication challenges (such as passwords or SMS OTP codes), KEYTRACE passively measures neuromuscular typing characteristics throughout an active user session.
                 </p>
 
                 {/* Topology Diagram Box */}
-                <div className="bg-[#0D1320] border border-[#243247] p-4 rounded-xl font-mono text-xs text-[#F4F7FC] overflow-x-auto">
-                  <div className="text-[10px] text-[#94A3B8] uppercase tracking-widest mb-2 pb-1 border-b border-[#243247]">
+                <div className="bg-[#0B1220] border border-[#263B5E] p-4 rounded-xl font-mono text-xs text-[#F8FAFC] overflow-x-auto">
+                  <div className="text-[10px] text-[#94A3B8] uppercase tracking-widest mb-2 pb-1 border-b border-[#263B5E]">
                     DATA FLOW &amp; TRUST BOUNDARIES
                   </div>
                   <pre className="text-[#94A3B8] leading-snug">
@@ -218,16 +218,16 @@ export function DocumentationPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                  <div className="bg-[#0D1320] border border-[#243247] p-3.5 rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#35D6E8]">React Web App</span>
+                  <div className="bg-[#0B1220] border border-[#263B5E] p-3.5 rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#38BDF8]">React Web App</span>
                     <span className="text-[11px] text-[#94A3B8]">TypeScript, Vite, Tailwind CSS, Lucide, Recharts. Client-side timing acquisition with high-resolution clocks.</span>
                   </div>
-                  <div className="bg-[#0D1320] border border-[#243247] p-3.5 rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#8B7CFF]">Node.js API</span>
+                  <div className="bg-[#0B1220] border border-[#263B5E] p-3.5 rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#FF6A00]">Node.js API</span>
                     <span className="text-[11px] text-[#94A3B8]">Express, Mongoose ODM, Double-Submit CSRF, Argon2id/Bcrypt password hashing, OpenAPI/Swagger at /api/docs.</span>
                   </div>
-                  <div className="bg-[#0D1320] border border-[#243247] p-3.5 rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#32D6A0]">Python ML Service</span>
+                  <div className="bg-[#0B1220] border border-[#263B5E] p-3.5 rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#22C55E]">Python ML Service</span>
                     <span className="text-[11px] text-[#94A3B8]">FastAPI, scikit-learn, NumPy, Pydantic. Internal service isolated by mutual secret key verification.</span>
                   </div>
                 </div>
@@ -243,7 +243,7 @@ export function DocumentationPage() {
                   <Badge variant="cyan">SECTION 02</Badge>
                   <Badge variant="neutral">MATHEMATICAL FORMULATIONS</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   2. The 10 Canonical Biometric Features
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -252,15 +252,15 @@ export function DocumentationPage() {
               </CardHeader>
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8]">
-                <p className="text-[#F4F7FC]">
+                <p className="text-[#F8FAFC]">
                   Every session window is translated into a standardized 10-dimensional real-valued vector in ℝ¹⁰. Raw observation timings are filtered through biological plausibility limits:
                   individual key holds must satisfy 10ms to 1500ms, and inter-key transitions must satisfy -500ms to 3000ms.
                 </p>
 
                 {/* Feature Table */}
-                <div className="overflow-x-auto border border-[#243247] rounded-xl">
+                <div className="overflow-x-auto border border-[#263B5E] rounded-xl">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D1320] text-[#94A3B8] border-b border-[#243247]">
+                    <thead className="bg-[#0B1220] text-[#94A3B8] border-b border-[#263B5E]">
                       <tr>
                         <th className="p-3">#</th>
                         <th className="p-3">Metric Label</th>
@@ -269,14 +269,14 @@ export function DocumentationPage() {
                         <th className="p-3">Biometric Significance</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#243247]/50 text-[#F4F7FC]">
+                    <tbody className="divide-y divide-[#263B5E]/50 text-[#F8FAFC]">
                       {FEATURE_NAMES.map((name, idx) => {
                         const meta = FEATURE_METADATA[name];
                         return (
-                          <tr key={name} className="hover:bg-[#172235]/40 transition-colors">
+                          <tr key={name} className="hover:bg-[#1A2A44]/40 transition-colors">
                             <td className="p-3 text-[#94A3B8] font-bold">{idx + 1}</td>
-                            <td className="p-3 font-bold text-[#F4F7FC]">{meta.label}</td>
-                            <td className="p-3 text-[#35D6E8] font-mono bg-[#0D1320]">{name}</td>
+                            <td className="p-3 font-bold text-[#F8FAFC]">{meta.label}</td>
+                            <td className="p-3 text-[#38BDF8] font-mono bg-[#0B1220]">{name}</td>
                             <td className="p-3 text-[#94A3B8]">{meta.unit}</td>
                             <td className="p-3 text-[#94A3B8] font-sans">{meta.description}</td>
                           </tr>
@@ -297,7 +297,7 @@ export function DocumentationPage() {
                   <Badge variant="cyan">SECTION 03</Badge>
                   <Badge variant="neutral">ML / INFERENCE</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   3. Personalized Machine Learning Pipeline
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -306,18 +306,18 @@ export function DocumentationPage() {
               </CardHeader>
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8] leading-relaxed">
-                <div className="p-3.5 bg-[#FFBF55]/10 border border-[#FFBF55]/20 rounded-xl text-[#FFBF55] font-mono text-xs">
+                <div className="p-3.5 bg-[#F59E0B]/10 border border-[#F59E0B]/20 rounded-xl text-[#F59E0B] font-mono text-xs">
                   [ARCHITECTURAL DECISION] Continuous user authentication represents an open-set threat model. The potential impostor is an unknown external actor who does not exist in the training dataset. Generic multi-class classifiers are structurally invalid because they assume all prospective claimants belong to known classes. KEYTRACE implements personalized one-class behavioural profiles.
                 </div>
 
-                <h4 className="font-mono text-xs font-bold text-[#F4F7FC] uppercase tracking-wider pt-2">
+                <h4 className="font-mono text-xs font-bold text-[#F8FAFC] uppercase tracking-wider pt-2">
                   Robust Distance Formulation
                 </h4>
                 <p>
                   For an enrolled profile containing S genuine sample vectors in ℝ¹⁰, reference parameters are calculated per feature dimension j (1 to 10):
                 </p>
 
-                <div className="bg-[#0D1320] border border-[#243247] p-4 rounded-xl font-mono text-xs text-[#F4F7FC] space-y-2">
+                <div className="bg-[#0B1220] border border-[#263B5E] p-4 rounded-xl font-mono text-xs text-[#F8FAFC] space-y-2">
                   <div>
                     <span className="text-[#94A3B8]">// 1. Median reference vector:</span><br />
                     <span>μ_j = median(&#123; x_j^(s) &#125;)</span>
@@ -340,18 +340,18 @@ export function DocumentationPage() {
                   </div>
                 </div>
 
-                <h4 className="font-mono text-xs font-bold text-[#F4F7FC] uppercase tracking-wider pt-2">
+                <h4 className="font-mono text-xs font-bold text-[#F8FAFC] uppercase tracking-wider pt-2">
                   Decision Rules
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
-                  <div className="p-3.5 bg-[#32D6A0]/10 border border-[#32D6A0]/20 rounded-xl flex flex-col gap-1">
-                    <span className="font-bold text-[#32D6A0]">[ PATTERN MATCH ]</span>
-                    <span className="text-[#F4F7FC]">D(z) ≤ 2.80</span>
+                  <div className="p-3.5 bg-[#22C55E]/10 border border-[#22C55E]/20 rounded-xl flex flex-col gap-1">
+                    <span className="font-bold text-[#22C55E]">[ PATTERN MATCH ]</span>
+                    <span className="text-[#F8FAFC]">D(z) ≤ 2.80</span>
                     <span className="text-[#94A3B8] text-[11px] font-sans">Cadence, hold, and transition characteristics conform closely to the enrolled biometric baseline.</span>
                   </div>
-                  <div className="p-3.5 bg-[#FFBF55]/10 border border-[#FFBF55]/20 rounded-xl flex flex-col gap-1">
-                    <span className="font-bold text-[#FFBF55]">[ NEEDS REVIEW ]</span>
-                    <span className="text-[#F4F7FC]">D(z) &gt; 2.80</span>
+                  <div className="p-3.5 bg-[#F59E0B]/10 border border-[#F59E0B]/20 rounded-xl flex flex-col gap-1">
+                    <span className="font-bold text-[#F59E0B]">[ NEEDS REVIEW ]</span>
+                    <span className="text-[#F8FAFC]">D(z) &gt; 2.80</span>
                     <span className="text-[#94A3B8] text-[11px] font-sans">Statistically significant divergence detected. May indicate account takeover, extreme user fatigue, or hardware change.</span>
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export function DocumentationPage() {
                   <Badge variant="cyan">SECTION 04</Badge>
                   <Badge variant="neutral">VERIFICATION LIFECYCLE</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   4. Continuous Verification Protocol
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -376,26 +376,26 @@ export function DocumentationPage() {
               </CardHeader>
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8] leading-relaxed">
-                <p className="text-[#F4F7FC]">
+                <p className="text-[#F8FAFC]">
                   A single anomalous keystroke window does not unilaterally terminate an authenticated session. Natural behavioural fluctuations occur due to temporary interruptions, physical adjustments, or altered typing speed.
                 </p>
 
-                <div className="bg-[#0D1320] border border-[#243247] p-4 rounded-xl flex flex-col gap-3 font-mono text-xs">
-                  <span className="text-xs font-bold text-[#35D6E8] uppercase tracking-wider">
+                <div className="bg-[#0B1220] border border-[#263B5E] p-4 rounded-xl flex flex-col gap-3 font-mono text-xs">
+                  <span className="text-xs font-bold text-[#38BDF8] uppercase tracking-wider">
                     Risk Decision Taxonomy
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <div className="p-2.5 border border-[#243247] bg-[#111927] rounded-lg">
-                      <span className="text-[#32D6A0] font-bold">MATCH:</span> Distance ≤ 2.80. Normal activity authorized.
+                    <div className="p-2.5 border border-[#263B5E] bg-[#111B2E] rounded-lg">
+                      <span className="text-[#22C55E] font-bold">MATCH:</span> Distance ≤ 2.80. Normal activity authorized.
                     </div>
-                    <div className="p-2.5 border border-[#243247] bg-[#111927] rounded-lg">
-                      <span className="text-[#FFBF55] font-bold">REVIEW:</span> Distance &gt; 2.80. Cumulative risk accumulator increments.
+                    <div className="p-2.5 border border-[#263B5E] bg-[#111B2E] rounded-lg">
+                      <span className="text-[#F59E0B] font-bold">REVIEW:</span> Distance &gt; 2.80. Cumulative risk accumulator increments.
                     </div>
-                    <div className="p-2.5 border border-[#243247] bg-[#111927] rounded-lg">
+                    <div className="p-2.5 border border-[#263B5E] bg-[#111B2E] rounded-lg">
                       <span className="text-[#94A3B8] font-bold">INSUFFICIENT_DATA:</span> Fewer than 15 valid key transitions recorded in window.
                     </div>
-                    <div className="p-2.5 border border-[#243247] bg-[#111927] rounded-lg">
-                      <span className="text-[#FF647C] font-bold">SERVICE_UNAVAILABLE:</span> Internal ML microservice timed out or degraded. Safe fallback engaged.
+                    <div className="p-2.5 border border-[#263B5E] bg-[#111B2E] rounded-lg">
+                      <span className="text-[#EF4444] font-bold">SERVICE_UNAVAILABLE:</span> Internal ML microservice timed out or degraded. Safe fallback engaged.
                     </div>
                   </div>
                 </div>
@@ -411,7 +411,7 @@ export function DocumentationPage() {
                   <Badge variant="cyan">SECTION 05</Badge>
                   <Badge variant="neutral">ETHICS &amp; PRIVACY</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   5. Ethical Biometrics &amp; Privacy (GDPR Compliance)
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -421,37 +421,37 @@ export function DocumentationPage() {
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8] leading-relaxed">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-1.5">
-                    <span className="text-xs font-mono font-bold text-[#35D6E8] flex items-center gap-1.5">
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-1.5">
+                    <span className="text-xs font-mono font-bold text-[#38BDF8] flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5" /> Zero Keylogging
                     </span>
                     <p className="text-[11px] text-[#94A3B8]">
-                      The browser client discards typed characters locally in RAM. Only millisecond intervals between events (<code className="text-[#F4F7FC]">holdMs</code>, <code className="text-[#F4F7FC]">flightMs</code>) are transmitted over TLS. No written passwords or texts are accessible.
+                      The browser client discards typed characters locally in RAM. Only millisecond intervals between events (<code className="text-[#F8FAFC]">holdMs</code>, <code className="text-[#F8FAFC]">flightMs</code>) are transmitted over TLS. No written passwords or texts are accessible.
                     </p>
                   </div>
 
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-1.5">
-                    <span className="text-xs font-mono font-bold text-[#32D6A0] flex items-center gap-1.5">
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-1.5">
+                    <span className="text-xs font-mono font-bold text-[#22C55E] flex items-center gap-1.5">
                       <Shield className="w-3.5 h-3.5" /> Informed Affirmative Consent
                     </span>
                     <p className="text-[11px] text-[#94A3B8]">
-                      Enrolment is strictly locked until a user submits an affirmative consent transaction. If consent is revoked, the profile is immediately transitioned to <code className="text-[#F4F7FC]">DISABLED</code>.
+                      Enrolment is strictly locked until a user submits an affirmative consent transaction. If consent is revoked, the profile is immediately transitioned to <code className="text-[#F8FAFC]">DISABLED</code>.
                     </p>
                   </div>
                 </div>
 
-                <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-2 font-mono text-xs">
+                <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-2 font-mono text-xs">
                   <span className="text-[#94A3B8] font-bold uppercase tracking-wider">
                     Data Subject Rights Implementation
                   </span>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <span className="text-[#F4F7FC]">
-                      <strong>Article 15 &amp; 20 (Export):</strong> <code className="text-[#35D6E8]">GET /api/v1/data/export</code> downloads complete structured JSON personal archive.
+                    <span className="text-[#F8FAFC]">
+                      <strong>Article 15 &amp; 20 (Export):</strong> <code className="text-[#38BDF8]">GET /api/v1/data/export</code> downloads complete structured JSON personal archive.
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <span className="text-[#F4F7FC]">
-                      <strong>Article 17 (Right to Erasure):</strong> <code className="text-[#FF647C]">DELETE /api/v1/account</code> cascades atomic deletion across all collections.
+                    <span className="text-[#F8FAFC]">
+                      <strong>Article 17 (Right to Erasure):</strong> <code className="text-[#EF4444]">DELETE /api/v1/account</code> cascades atomic deletion across all collections.
                     </span>
                   </div>
                 </div>
@@ -467,7 +467,7 @@ export function DocumentationPage() {
                   <Badge variant="cyan">SECTION 06</Badge>
                   <Badge variant="neutral">REST API</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   6. REST API Specification &amp; JSON Contracts
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -481,7 +481,7 @@ export function DocumentationPage() {
                   <div className="flex items-center justify-between text-xs font-mono text-[#94A3B8]">
                     <span className="flex items-center gap-2">
                       <Badge variant="cyan">POST</Badge>
-                      <span className="text-[#F4F7FC]">/api/v1/verification/sessions/:sessionId/evaluate</span>
+                      <span className="text-[#F8FAFC]">/api/v1/verification/sessions/:sessionId/evaluate</span>
                     </span>
                     <button
                       onClick={() =>
@@ -490,14 +490,14 @@ export function DocumentationPage() {
                           "curl-evaluate"
                         )
                       }
-                      className="flex items-center gap-1 text-[11px] text-[#94A3B8] hover:text-[#F4F7FC]"
+                      className="flex items-center gap-1 text-[11px] text-[#94A3B8] hover:text-[#F8FAFC]"
                     >
-                      {copiedCode === "curl-evaluate" ? <Check className="w-3.5 h-3.5 text-[#32D6A0]" /> : <Copy className="w-3.5 h-3.5" />}
+                      {copiedCode === "curl-evaluate" ? <Check className="w-3.5 h-3.5 text-[#22C55E]" /> : <Copy className="w-3.5 h-3.5" />}
                       <span>{copiedCode === "curl-evaluate" ? "Copied" : "Copy cURL"}</span>
                     </button>
                   </div>
 
-                  <pre className="p-4 bg-[#0D1320] border border-[#243247] rounded-xl font-mono text-xs text-[#F4F7FC] overflow-x-auto">
+                  <pre className="p-4 bg-[#0B1220] border border-[#263B5E] rounded-xl font-mono text-xs text-[#F8FAFC] overflow-x-auto">
 {`// Evaluates an active typing window during a continuous session
 POST /api/v1/verification/sessions/{sessionId}/evaluate
 Content-Type: application/json
@@ -541,7 +541,7 @@ Cookie: keytrace_session={jwt_cookie}; keytrace_csrf={csrf_token}
                   <Badge variant="cyan">SECTION 07</Badge>
                   <Badge variant="neutral">THREAT MODEL</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   7. Security Threat Model &amp; Defense-in-Depth
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -551,23 +551,23 @@ Cookie: keytrace_session={jwt_cookie}; keytrace_csrf={csrf_token}
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8] leading-relaxed">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#35D6E8]">Credential Storage</span>
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#38BDF8]">Credential Storage</span>
                     <span className="text-[11px] text-[#94A3B8]">Passwords hashed using Bcrypt (work factor 12) with cryptographically random salts. Timing attacks resisted by generic invalid responses.</span>
                   </div>
 
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#8B7CFF]">Double-Submit CSRF</span>
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#FF6A00]">Double-Submit CSRF</span>
                     <span className="text-[11px] text-[#94A3B8]">State mutations validate x-csrf-token header against un-forgeable readable cookie keytrace_csrf. Prevents cross-origin forged posts.</span>
                   </div>
 
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#32D6A0]">Replay Defense</span>
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#22C55E]">Replay Defense</span>
                     <span className="text-[11px] text-[#94A3B8]">Verification sessions require UUIDv4 sessions with monotonically non-decreasing timestamps. Replayed session identifiers are rejected.</span>
                   </div>
 
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl flex flex-col gap-1">
-                    <span className="text-xs font-mono font-bold text-[#FFBF55]">NoSQL Injection Defense</span>
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl flex flex-col gap-1">
+                    <span className="text-xs font-mono font-bold text-[#F59E0B]">NoSQL Injection Defense</span>
                     <span className="text-[11px] text-[#94A3B8]">Recursive key sanitization strips keys prefixed with $ or containing . alongside strict Zod schema validation.</span>
                   </div>
                 </div>
@@ -583,7 +583,7 @@ Cookie: keytrace_session={jwt_cookie}; keytrace_csrf={csrf_token}
                   <Badge variant="cyan">SECTION 08</Badge>
                   <Badge variant="neutral">CALIBRATION &amp; METRICS</Badge>
                 </div>
-                <CardTitle className="text-xl font-bold text-[#F4F7FC]">
+                <CardTitle className="text-xl font-bold text-[#F8FAFC]">
                   8. Benchmarks, Calibration &amp; Limitations
                 </CardTitle>
                 <CardDescription className="text-xs text-[#94A3B8]">
@@ -593,25 +593,25 @@ Cookie: keytrace_session={jwt_cookie}; keytrace_csrf={csrf_token}
 
               <div className="flex flex-col gap-4 text-xs text-[#94A3B8] leading-relaxed">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-center">
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl">
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl">
                     <span className="text-[10px] text-[#94A3B8] uppercase">EQUAL ERROR RATE (EER)</span>
-                    <p className="text-xl font-bold text-[#32D6A0] mt-1">≤ 8.4%</p>
+                    <p className="text-xl font-bold text-[#22C55E] mt-1">≤ 8.4%</p>
                     <span className="text-[10px] text-[#94A3B8]">Held-out benchmark</span>
                   </div>
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl">
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl">
                     <span className="text-[10px] text-[#94A3B8] uppercase">ROC AREA UNDER CURVE</span>
-                    <p className="text-xl font-bold text-[#35D6E8] mt-1">0.962</p>
+                    <p className="text-xl font-bold text-[#38BDF8] mt-1">0.962</p>
                     <span className="text-[10px] text-[#94A3B8]">Genuine vs Impostor</span>
                   </div>
-                  <div className="p-3.5 border border-[#243247] bg-[#0D1320] rounded-xl">
+                  <div className="p-3.5 border border-[#263B5E] bg-[#0B1220] rounded-xl">
                     <span className="text-[10px] text-[#94A3B8] uppercase">INFERENCE LATENCY</span>
-                    <p className="text-xl font-bold text-[#8B7CFF] mt-1">&lt; 18ms</p>
+                    <p className="text-xl font-bold text-[#FF6A00] mt-1">&lt; 18ms</p>
                     <span className="text-[10px] text-[#94A3B8]">FastAPI microservice</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-[#0D1320] border border-[#243247] rounded-xl text-xs text-[#94A3B8] space-y-2">
-                  <div className="text-[#FFBF55] font-mono font-bold flex items-center gap-1.5">
+                <div className="p-4 bg-[#0B1220] border border-[#263B5E] rounded-xl text-xs text-[#94A3B8] space-y-2">
+                  <div className="text-[#F59E0B] font-mono font-bold flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5" /> Known Physical &amp; Environmental Limitations
                   </div>
                   <ul className="list-disc pl-4 space-y-1">

@@ -4,6 +4,7 @@ import { CURRENT_FEATURE_SCHEMA_VERSION, FeatureVector } from "@keytrace/shared"
 export interface ITypingSample extends Document {
   userId: mongoose.Types.ObjectId;
   profileId: mongoose.Types.ObjectId;
+  sampleType: "calibration" | "natural" | "verification";
   featureVector: FeatureVector;
   featureSchemaVersion: string;
   qualityStatus: "valid" | "warning" | "rejected";
@@ -24,6 +25,12 @@ const TypingSampleSchema = new Schema<ITypingSample>(
       type: Schema.Types.ObjectId,
       ref: "TypingProfile",
       required: true,
+      index: true,
+    },
+    sampleType: {
+      type: String,
+      enum: ["calibration", "natural", "verification"],
+      default: "calibration",
       index: true,
     },
     featureVector: {

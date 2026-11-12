@@ -65,22 +65,22 @@ export function RegisterPage() {
   return (
     <div className="flex items-center justify-center min-h-[75vh] py-8 relative">
       {/* Ambient background glow */}
-      <div className="absolute w-96 h-96 rounded-full bg-indigo-500/10 blur-[120px] pointer-events-none -z-10" />
+      <div className="absolute w-96 h-96 rounded-full bg-[#38BDF8]/5 blur-[120px] pointer-events-none -z-10" />
 
-      <Card elevated className="w-full max-w-md p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border-white/[0.08] bg-zinc-950/70 backdrop-blur-xl">
+      <Card elevated className="w-full max-w-md p-6 sm:p-8 shadow-2xl border-[#263B5E] bg-[#111B2E]">
         <CardHeader className="text-center items-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center text-white mb-3 shadow-sm">
-            <Shield className="w-6 h-6 text-indigo-400" />
+          <div className="w-12 h-12 rounded-2xl bg-[#0B1220] border border-[#263B5E] flex items-center justify-center text-[#F8FAFC] mb-3 shadow-sm">
+            <Shield className="w-6 h-6 text-[#38BDF8]" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">Create Account</CardTitle>
-          <CardDescription className="text-zinc-400 font-sans mt-1 text-xs">
+          <CardTitle className="text-2xl font-bold text-[#F8FAFC]">Create Account</CardTitle>
+          <CardDescription className="text-[#94A3B8] font-sans mt-1 text-xs">
             Begin continuous behavioural keystroke authentication enrollment
           </CardDescription>
         </CardHeader>
 
         {error && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-300">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+          <div className="mb-5 p-3.5 rounded-xl bg-[#EF4444]/10 border border-[#EF4444]/20 flex items-start gap-2.5 text-xs text-[#EF4444]">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#EF4444]" />
             <span>{error}</span>
           </div>
         )}
@@ -123,7 +123,7 @@ export function RegisterPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex={-1}
-                className="text-zinc-500 hover:text-zinc-300 p-1 focus:outline-none transition-colors cursor-pointer"
+                className="text-[#64748B] hover:text-[#94A3B8] p-1 focus:outline-none transition-colors cursor-pointer"
                 title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -133,17 +133,17 @@ export function RegisterPage() {
 
           {/* Password Quality Indicator */}
           {password.length > 0 && (
-            <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/[0.06] text-xs grid grid-cols-2 gap-2">
-              <span className={`flex items-center gap-1.5 ${hasMinLength ? "text-emerald-400" : "text-zinc-500"}`}>
+            <div className="p-3 rounded-xl bg-[#0B1220] border border-[#263B5E] text-xs grid grid-cols-2 gap-2">
+              <span className={`flex items-center gap-1.5 ${hasMinLength ? "text-[#22C55E]" : "text-[#64748B]"}`}>
                 {hasMinLength ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />} 8+ Characters
               </span>
-              <span className={`flex items-center gap-1.5 ${hasUppercase ? "text-emerald-400" : "text-zinc-500"}`}>
+              <span className={`flex items-center gap-1.5 ${hasUppercase ? "text-[#22C55E]" : "text-[#64748B]"}`}>
                 {hasUppercase ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />} Uppercase Letter
               </span>
-              <span className={`flex items-center gap-1.5 ${hasLowercase ? "text-emerald-400" : "text-zinc-500"}`}>
+              <span className={`flex items-center gap-1.5 ${hasLowercase ? "text-[#22C55E]" : "text-[#64748B]"}`}>
                 {hasLowercase ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />} Lowercase Letter
               </span>
-              <span className={`flex items-center gap-1.5 ${hasNumber ? "text-emerald-400" : "text-zinc-500"}`}>
+              <span className={`flex items-center gap-1.5 ${hasNumber ? "text-[#22C55E]" : "text-[#64748B]"}`}>
                 {hasNumber ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />} Number (0-9)
               </span>
             </div>
@@ -163,7 +163,7 @@ export function RegisterPage() {
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 tabIndex={-1}
-                className="text-zinc-500 hover:text-zinc-300 p-1 focus:outline-none transition-colors cursor-pointer"
+                className="text-[#64748B] hover:text-[#94A3B8] p-1 focus:outline-none transition-colors cursor-pointer"
                 title={showConfirmPassword ? "Hide password" : "Show password"}
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -190,9 +190,9 @@ export function RegisterPage() {
           </Button>
         </form>
 
-        <div className="mt-6 pt-5 border-t border-white/[0.06] text-center text-xs text-zinc-400">
+        <div className="mt-6 pt-5 border-t border-[#263B5E] text-center text-xs text-[#94A3B8]">
           Already have an account?{" "}
-          <Link to="/login" className="text-white hover:underline font-medium transition-colors">
+          <Link to="/login" className="text-[#38BDF8] hover:underline font-medium transition-colors">
             Sign In here
           </Link>
         </div>

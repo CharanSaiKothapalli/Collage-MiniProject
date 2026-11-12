@@ -23,10 +23,10 @@ export function OnboardingPage() {
   return (
     <div className="max-w-4xl mx-auto py-6 flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <Badge variant="cyan" className="self-start">
+        <Badge variant="blue" className="self-start">
           <Sparkles className="w-3.5 h-3.5 mr-1" /> FIRST-TIME ORIENTATION
         </Badge>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F4F7FC]">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F8FAFC]">
           Welcome to KEYTRACE Behavioral Security
         </h1>
         <p className="text-xs sm:text-sm text-[#94A3B8]">
@@ -37,30 +37,30 @@ export function OnboardingPage() {
       {/* 3 Step Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <Card elevated className="flex flex-col gap-3 p-5">
-          <div className="w-8 h-8 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#35D6E8] font-bold text-xs font-mono">
+          <div className="w-8 h-8 rounded-xl bg-[#0B1220] border border-[#263B5E] flex items-center justify-center text-[#38BDF8] font-bold text-xs font-mono">
             01
           </div>
-          <CardTitle className="text-sm font-bold text-[#F4F7FC]">Understand Timing</CardTitle>
+          <CardTitle className="text-sm font-bold text-[#F8FAFC]">Understand Timing</CardTitle>
           <CardDescription className="text-xs text-[#94A3B8] leading-relaxed">
             Your typing pattern is characterized by millisecond durations of key holds and flight transitions between letters.
           </CardDescription>
         </Card>
 
         <Card elevated className="flex flex-col gap-3 p-5">
-          <div className="w-8 h-8 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#8B7CFF] font-bold text-xs font-mono">
+          <div className="w-8 h-8 rounded-xl bg-[#0B1220] border border-[#263B5E] flex items-center justify-center text-[#FF6A00] font-bold text-xs font-mono">
             02
           </div>
-          <CardTitle className="text-sm font-bold text-[#F4F7FC]">Enroll 10 Sessions</CardTitle>
+          <CardTitle className="text-sm font-bold text-[#F8FAFC]">Enroll 10 Sessions</CardTitle>
           <CardDescription className="text-xs text-[#94A3B8] leading-relaxed">
             A single session has natural variance. Completing 10 short typing sessions builds a statistically robust profile.
           </CardDescription>
         </Card>
 
         <Card elevated className="flex flex-col gap-3 p-5">
-          <div className="w-8 h-8 rounded-xl bg-[#0D1320] border border-[#243247] flex items-center justify-center text-[#32D6A0] font-bold text-xs font-mono">
+          <div className="w-8 h-8 rounded-xl bg-[#0B1220] border border-[#263B5E] flex items-center justify-center text-[#22C55E] font-bold text-xs font-mono">
             03
           </div>
-          <CardTitle className="text-sm font-bold text-[#F4F7FC]">Continuous Check</CardTitle>
+          <CardTitle className="text-sm font-bold text-[#F8FAFC]">Continuous Check</CardTitle>
           <CardDescription className="text-xs text-[#94A3B8] leading-relaxed">
             During active verification sessions, KEYTRACE periodically evaluates typing windows against your baseline.
           </CardDescription>
@@ -70,10 +70,10 @@ export function OnboardingPage() {
       {/* Interactive Practice Component */}
       <Card elevated className="p-6 sm:p-8 flex flex-col gap-6">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#35D6E8] flex items-center gap-1.5 mb-1 font-mono">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#38BDF8] flex items-center gap-1.5 mb-1 font-mono">
             <Keyboard className="w-4 h-4" /> Interactive Practice Sandbox
           </span>
-          <h2 className="text-xl font-bold text-[#F4F7FC]">
+          <h2 className="text-xl font-bold text-[#F8FAFC]">
             Test Your Cadence Before Enrolment
           </h2>
           <p className="text-xs text-[#94A3B8] mt-0.5">
@@ -89,17 +89,17 @@ export function OnboardingPage() {
         />
 
         {practiceCompleted && practiceFeatures && (
-          <div className="p-4 rounded-xl bg-[#0D1320] border border-[#243247] flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-150">
+          <div className="p-4 rounded-xl bg-[#0B1220] border border-[#263B5E] flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-[#32D6A0] shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-[#22C55E] shrink-0" />
               <div>
-                <span className="text-xs font-bold text-[#F4F7FC] block">
+                <span className="text-xs font-bold text-[#F8FAFC] block">
                   Practice Sample Registered!
                 </span>
                 <p className="text-xs text-[#94A3B8] font-mono mt-0.5">
-                  Mean Hold: <span className="text-[#35D6E8]">{practiceFeatures.avgH}ms</span> &bull; Mean Flight:{" "}
-                  <span className="text-[#8B7CFF]">{practiceFeatures.avgF}ms</span> &bull; Keys:{" "}
-                  <span className="text-[#32D6A0] font-bold">{practiceFeatures.count}</span>
+                  Mean Hold: <span className="text-[#38BDF8]">{practiceFeatures.avgH}ms</span> &bull; Mean Flight:{" "}
+                  <span className="text-[#FF6A00]">{practiceFeatures.avgF}ms</span> &bull; Keys:{" "}
+                  <span className="text-[#22C55E] font-bold">{practiceFeatures.count}</span>
                 </p>
               </div>
             </div>
@@ -117,7 +117,7 @@ export function OnboardingPage() {
       </Card>
 
       <div className="flex justify-end">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/enrollment")} className="text-[#94A3B8] hover:text-[#F4F7FC]">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/enrollment")} className="text-[#94A3B8] hover:text-[#F8FAFC]">
           Skip directly to enrolment <ArrowRight className="w-3.5 h-3.5 ml-1" />
         </Button>
       </div>

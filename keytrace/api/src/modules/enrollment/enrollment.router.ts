@@ -63,6 +63,76 @@ enrollmentRouter.post(
       return;
     }
 
+    // Prevent accidental duplicate submission of the exact same session
+    if (payload.sessionId) {
+      const existingSession = await TypingSample.findOne({
+        userId: user._id,
+        sessionId: payload.sessionId,
+      });
+      if (existingSession) {
+        res.status(409).json({
+          ok: false,
+          error: "This session has already been recorded. Duplicate submission rejected.",
+          code: "DUPLICATE_SESSION",
+        });
+        return;
+      }
+    }
+
+    const sampleType = payload.sampleType || "calibration";
+
+    // Prevent excess sample submission if profile is already fully enrolled and model is active
+    if (profile.isModelBuilt && profile.status === PROFILE_STATUS.READY_FOR_TESTING) {
+      const currentCount = await TypingSample.countDocuments({
+        userId: user._id,
+        qualityStatus: { $ne: "rejected" },
+      });
+      if (currentCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
+        res.status(400).json({
+          ok: false,
+          error: "Enrollment is already complete and the hybrid model is active. Please proceed to Verification or delete a sample before recording new ones.",
+          code: "ENROLLMENT_ALREADY_COMPLETE",
+        });
+        return;
+      }
+    }
+
+    // Prevent exceeding stage capacity
+    if (sampleType === "calibration") {
+      const calCount = await TypingSample.countDocuments({
+        userId: user._id,
+        $or: [
+          { sampleType: "calibration" },
+          { sampleType: { $exists: false } },
+          { sampleType: null },
+          { sampleType: "" },
+        ],
+        qualityStatus: { $ne: "rejected" },
+      });
+      if (calCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES) {
+        res.status(400).json({
+          ok: false,
+          error: "Stage 1 (Reference Calibration) is already complete with 5 samples. Please proceed to Stage 2 (Natural Typing).",
+          code: "STAGE_FULL",
+        });
+        return;
+      }
+    } else if (sampleType === "natural") {
+      const natCount = await TypingSample.countDocuments({
+        userId: user._id,
+        sampleType: "natural",
+        qualityStatus: { $ne: "rejected" },
+      });
+      if (natCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES) {
+        res.status(400).json({
+          ok: false,
+          error: "Stage 2 (Natural Typing) is already complete with 5 samples. Please compile your hybrid model or proceed to Verification.",
+          code: "STAGE_FULL",
+        });
+        return;
+      }
+    }
+
     // Extract deterministic feature vector from timing observations
     let features;
     try {
@@ -77,8 +147,12 @@ enrollmentRouter.post(
     }
 
     // Quality assessment: verify typing cadence variability and minimum key count
+    const minObs = payload.sampleType === "natural"
+      ? ENROLLMENT_THRESHOLDS.MIN_OBSERVATIONS_PER_NATURAL
+      : ENROLLMENT_THRESHOLDS.MIN_OBSERVATIONS_PER_SAMPLE;
+
     const qualityStatus =
-      features.std_hold > 0 && features.std_flight > 0 && payload.observations.length >= 8
+      features.std_hold > 0 && features.std_flight > 0 && payload.observations.length >= minObs
         ? "valid"
         : "warning";
 
@@ -87,6 +161,7 @@ enrollmentRouter.post(
     const sample = await TypingSample.create({
       userId: user._id,
       profileId: profile._id,
+      sampleType,
       featureVector: features,
       featureSchemaVersion: CURRENT_FEATURE_SCHEMA_VERSION,
       qualityStatus,
@@ -94,35 +169,86 @@ enrollmentRouter.post(
       consentReference: latestConsent?._id,
     });
 
-    const newCount = await TypingSample.countDocuments({
-      userId: user._id,
-      qualityStatus: { $ne: "rejected" },
-    });
+    const [calibrationCount, naturalCount, totalRecorded] = await Promise.all([
+      TypingSample.countDocuments({
+        userId: user._id,
+        $or: [
+          { sampleType: "calibration" },
+          { sampleType: { $exists: false } },
+          { sampleType: null },
+          { sampleType: "" },
+        ],
+        qualityStatus: { $ne: "rejected" },
+      }),
+      TypingSample.countDocuments({
+        userId: user._id,
+        sampleType: "natural",
+        qualityStatus: { $ne: "rejected" },
+      }),
+      TypingSample.countDocuments({
+        userId: user._id,
+      }),
+    ]);
 
-    profile.enrollmentCount = newCount;
+    const totalValid = calibrationCount + naturalCount;
+
+    profile.enrollmentCount = totalValid;
+    profile.calibrationCount = calibrationCount;
+    profile.naturalCount = naturalCount;
+
+    let stage = "calibration";
+    if (calibrationCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES) {
+      if (naturalCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES) {
+        stage = "complete";
+      } else {
+        stage = "natural";
+      }
+    }
+    profile.enrollmentStage = stage;
+
     let modelBuildResult = null;
 
     // Automatically build & save the model completely once required baseline samples exist
-    if (newCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
-      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
+    const isReadyToBuild =
+      calibrationCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES &&
+      naturalCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES;
+
+    if (isReadyToBuild) {
       try {
         const allSamples = await TypingSample.find({
           userId: user._id,
           qualityStatus: { $ne: "rejected" },
         }).sort({ createdAt: -1 });
         const featureVectors = allSamples.map((s) => s.featureVector);
+        const sampleTypes = allSamples.map((s) => s.sampleType || "calibration");
 
-        modelBuildResult = await mlClient.buildAndSaveModel(user._id.toString(), featureVectors);
+        modelBuildResult = await mlClient.buildAndSaveModel(
+          user._id.toString(),
+          featureVectors,
+          ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD,
+          sampleTypes
+        );
+
+        // Verify model artifact can be retrieved and loaded from disk
+        const verifiedModel = await mlClient.getSavedModelInfo(user._id.toString());
+        if (!verifiedModel.exists) {
+          throw new Error("Serialized model verification failed: model artifact not loadable from disk.");
+        }
+
         profile.isModelBuilt = true;
+        profile.status = PROFILE_STATUS.READY_FOR_TESTING;
         profile.modelTrainedAt = new Date(modelBuildResult.trainedAt);
         profile.modelSampleCount = modelBuildResult.sampleCount;
         profile.stabilityScore = modelBuildResult.trainingMetrics?.stability_score;
         profile.calibratedThreshold = modelBuildResult.calibratedThreshold;
       } catch (err: any) {
         console.error("Auto model build error during enrollment:", err.message);
+        profile.isModelBuilt = false;
+        profile.status = PROFILE_STATUS.ENROLLING;
       }
     } else {
       profile.status = PROFILE_STATUS.ENROLLING;
+      profile.isModelBuilt = false;
     }
     await profile.save();
 
@@ -133,17 +259,33 @@ enrollmentRouter.post(
       resourceType: "TypingSample",
       resourceId: sample._id.toString(),
       ipAddress: req.ip,
-      metadata: { sampleCount: newCount, qualityStatus, isModelBuilt: profile.isModelBuilt },
+      metadata: {
+        sampleCount: totalValid,
+        calibrationCount,
+        naturalCount,
+        stage,
+        qualityStatus,
+        isModelBuilt: profile.isModelBuilt,
+      },
     });
+
+    const completionMessage =
+      stage === "complete"
+        ? "Hybrid enrolment complete! Model built and saved. Profile is ready for instant verification."
+        : stage === "natural"
+        ? `Reference calibration complete! Now in Natural Typing mode (${naturalCount}/${ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES} samples).`
+        : `Calibration sample ${calibrationCount} of ${ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES} recorded.`;
 
     res.status(201).json({
       ok: true,
-      message:
-        newCount >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED
-          ? "Enrolment complete! Model built and saved. Profile is ready for instant verification."
-          : `Sample ${newCount} of ${ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} saved successfully.`,
+      message: completionMessage,
       sampleId: sample._id,
-      count: newCount,
+      count: totalValid,
+      calibrationCount,
+      naturalCount,
+      minCalibrationRequired: ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES,
+      minNaturalRequired: ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES,
+      stage,
       required: ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED,
       profileStatus: profile.status,
       qualityStatus,
@@ -177,16 +319,65 @@ enrollmentRouter.post("/build-model", async (req: Request, res: Response): Promi
     return;
   }
 
+  const calibrationCount = samples.filter((s) => s.sampleType !== "natural").length;
+  const naturalCount = samples.filter((s) => s.sampleType === "natural").length;
+
+  if (
+    calibrationCount < ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES ||
+    naturalCount < ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES
+  ) {
+    res.status(400).json({
+      ok: false,
+      error: `Insufficient samples for hybrid model compilation: requires at least 5 calibration samples (recorded: ${calibrationCount}) and 5 natural typing samples (recorded: ${naturalCount}).`,
+      code: "INSUFFICIENT_SAMPLES",
+      calibrationCount,
+      naturalCount,
+      requiredCalibration: ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES,
+      requiredNatural: ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES,
+    });
+    return;
+  }
+
   try {
     const featureVectors = samples.map((s) => s.featureVector);
-    const buildResult = await mlClient.buildAndSaveModel(user._id.toString(), featureVectors);
+    const sampleTypes = samples.map((s) => s.sampleType || "calibration");
+    const buildResult = await mlClient.buildAndSaveModel(
+      user._id.toString(),
+      featureVectors,
+      ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD,
+      sampleTypes
+    );
+
+    // Verify model artifact can be retrieved and loaded from disk
+    const verifiedModel = await mlClient.getSavedModelInfo(user._id.toString());
+    if (!verifiedModel.exists) {
+      throw new Error("Serialized model verification failed: model artifact not loadable from disk.");
+    }
+
+    let stage = "calibration";
+    if (calibrationCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES) {
+      if (naturalCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES) {
+        stage = "complete";
+      } else {
+        stage = "natural";
+      }
+    }
 
     if (!profile) {
       profile = await TypingProfile.create({
         userId: user._id,
-        status: samples.length >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED ? PROFILE_STATUS.READY_FOR_TESTING : PROFILE_STATUS.ENROLLING,
+        status: PROFILE_STATUS.READY_FOR_TESTING,
         enrollmentCount: samples.length,
+        calibrationCount,
+        naturalCount,
+        enrollmentStage: stage,
       });
+    } else {
+      profile.calibrationCount = calibrationCount;
+      profile.naturalCount = naturalCount;
+      profile.enrollmentCount = samples.length;
+      profile.enrollmentStage = stage;
+      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
     }
 
     profile.isModelBuilt = true;
@@ -194,9 +385,6 @@ enrollmentRouter.post("/build-model", async (req: Request, res: Response): Promi
     profile.modelSampleCount = buildResult.sampleCount;
     profile.stabilityScore = buildResult.trainingMetrics?.stability_score;
     profile.calibratedThreshold = buildResult.calibratedThreshold;
-    if (samples.length >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
-      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
-    }
     await profile.save();
 
     await logAuditEvent({
@@ -211,10 +399,14 @@ enrollmentRouter.post("/build-model", async (req: Request, res: Response): Promi
 
     res.json({
       ok: true,
-      message: "Biometric model built and saved completely. Future verifications will run from this saved model without retraining.",
+      message: "Hybrid biometric model built and saved completely. Future verifications will run from this saved model without retraining.",
       buildResult,
     });
   } catch (err: any) {
+    if (profile) {
+      profile.isModelBuilt = false;
+      await profile.save();
+    }
     res.status(500).json({
       ok: false,
       error: err.message || "Failed to build and save model.",
@@ -230,17 +422,92 @@ enrollmentRouter.get("/status", async (req: Request, res: Response): Promise<voi
   const user = req.user!;
   let profile = await TypingProfile.findOne({ userId: user._id });
 
-  const totalSamples = await TypingSample.countDocuments({ userId: user._id });
-  const validSamples = await TypingSample.countDocuments({ userId: user._id, qualityStatus: "valid" });
+  const [calibrationCount, naturalCount, totalSamples] = await Promise.all([
+    TypingSample.countDocuments({
+      userId: user._id,
+      $or: [
+        { sampleType: "calibration" },
+        { sampleType: { $exists: false } },
+        { sampleType: null },
+        { sampleType: "" },
+      ],
+      qualityStatus: { $ne: "rejected" },
+    }),
+    TypingSample.countDocuments({
+      userId: user._id,
+      sampleType: "natural",
+      qualityStatus: { $ne: "rejected" },
+    }),
+    TypingSample.countDocuments({ userId: user._id }),
+  ]);
+
+  const validSamples = calibrationCount + naturalCount;
+
+  let stage = "calibration";
+  if (calibrationCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES) {
+    if (naturalCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES) {
+      stage = "complete";
+    } else {
+      stage = "natural";
+    }
+  }
+
+  // Check whether saved model actually exists on disk
+  let savedModelExists = false;
+  if (profile?.isModelBuilt) {
+    const modelCheck = await mlClient.getSavedModelInfo(user._id.toString());
+    savedModelExists = modelCheck.exists;
+    if (!savedModelExists) {
+      profile.isModelBuilt = false;
+      if (profile.status === PROFILE_STATUS.READY_FOR_TESTING) {
+        profile.status = stage === "complete" ? PROFILE_STATUS.ENROLLING : PROFILE_STATUS.ENROLLING;
+      }
+    }
+  }
+
+  // Always keep profile.enrollmentCount, calibrationCount, naturalCount in sync with DB
+  if (profile) {
+    let profileUpdated = false;
+    if (profile.enrollmentCount !== validSamples) {
+      profile.enrollmentCount = validSamples;
+      profileUpdated = true;
+    }
+    if (profile.calibrationCount !== calibrationCount) {
+      profile.calibrationCount = calibrationCount;
+      profileUpdated = true;
+    }
+    if (profile.naturalCount !== naturalCount) {
+      profile.naturalCount = naturalCount;
+      profileUpdated = true;
+    }
+    if (profile.enrollmentStage !== stage) {
+      profile.enrollmentStage = stage;
+      profileUpdated = true;
+    }
+    if (profileUpdated) {
+      await profile.save();
+    }
+  }
+
+  const isReady =
+    profile?.isModelBuilt &&
+    savedModelExists &&
+    calibrationCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES &&
+    naturalCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES;
 
   res.json({
     ok: true,
-    status: profile?.status || PROFILE_STATUS.NOT_ENROLLED,
+    status: isReady ? PROFILE_STATUS.READY_FOR_TESTING : (profile?.status || PROFILE_STATUS.NOT_ENROLLED),
     count: validSamples,
+    calibrationCount,
+    naturalCount,
+    minCalibrationRequired: ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES,
+    minNaturalRequired: ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES,
+    stage,
     totalRecorded: totalSamples,
     required: ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED,
-    isReady: (profile?.enrollmentCount || 0) >= ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED,
-    isModelBuilt: profile?.isModelBuilt || false,
+    isReady: !!isReady,
+    isModelBuilt: !!(profile?.isModelBuilt && savedModelExists),
     modelTrainedAt: profile?.modelTrainedAt,
     stabilityScore: profile?.stabilityScore,
     calibratedThreshold: profile?.calibratedThreshold,
@@ -261,6 +528,7 @@ enrollmentRouter.get("/samples", async (req: Request, res: Response): Promise<vo
     samples: samples.map((s) => ({
       id: s._id,
       sessionId: s.sessionId,
+      sampleType: s.sampleType || "calibration",
       featureVector: s.featureVector,
       qualityStatus: s.qualityStatus,
       createdAt: s.createdAt,
@@ -283,15 +551,45 @@ enrollmentRouter.delete("/samples/:sampleId", async (req: Request, res: Response
 
   await sample.deleteOne();
 
-  const count = await TypingSample.countDocuments({
-    userId: user._id,
-    qualityStatus: { $ne: "rejected" },
-  });
+  const [calibrationCount, naturalCount] = await Promise.all([
+    TypingSample.countDocuments({
+      userId: user._id,
+      $or: [
+        { sampleType: "calibration" },
+        { sampleType: { $exists: false } },
+        { sampleType: null },
+        { sampleType: "" },
+      ],
+      qualityStatus: { $ne: "rejected" },
+    }),
+    TypingSample.countDocuments({
+      userId: user._id,
+      sampleType: "natural",
+      qualityStatus: { $ne: "rejected" },
+    }),
+  ]);
+
+  const count = calibrationCount + naturalCount;
+
+  let stage = "calibration";
+  if (calibrationCount >= ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES) {
+    if (naturalCount >= ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES) {
+      stage = "complete";
+    } else {
+      stage = "natural";
+    }
+  }
 
   const profile = await TypingProfile.findOne({ userId: user._id });
   if (profile) {
     profile.enrollmentCount = count;
-    if (count < ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
+    profile.calibrationCount = calibrationCount;
+    profile.naturalCount = naturalCount;
+    profile.enrollmentStage = stage;
+    if (
+      calibrationCount < ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES ||
+      naturalCount < ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES
+    ) {
       profile.status = count === 0 ? PROFILE_STATUS.NOT_ENROLLED : PROFILE_STATUS.NEEDS_MORE_DATA;
       profile.isModelBuilt = false;
       // Invalidate saved model if sample count dropped below required
@@ -313,6 +611,9 @@ enrollmentRouter.delete("/samples/:sampleId", async (req: Request, res: Response
     ok: true,
     message: "Enrolment sample deleted.",
     remainingCount: count,
+    calibrationCount,
+    naturalCount,
+    stage,
     profileStatus: profile?.status,
     isModelBuilt: profile?.isModelBuilt || false,
   });
@@ -329,13 +630,19 @@ enrollmentRouter.post("/finalize", async (req: Request, res: Response): Promise<
     qualityStatus: "valid",
   }).sort({ createdAt: -1 });
 
-  const count = samples.length;
+  const calibrationCount = samples.filter((s) => s.sampleType !== "natural").length;
+  const naturalCount = samples.filter((s) => s.sampleType === "natural").length;
 
-  if (count < ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED) {
+  if (
+    calibrationCount < ENROLLMENT_THRESHOLDS.MIN_CALIBRATION_SAMPLES ||
+    naturalCount < ENROLLMENT_THRESHOLDS.MIN_NATURAL_SAMPLES
+  ) {
     res.status(400).json({
       ok: false,
-      error: `Cannot finalise enrolment: ${count} of ${ENROLLMENT_THRESHOLDS.MIN_SAMPLES_REQUIRED} valid samples recorded.`,
+      error: `Cannot finalise enrolment: requires at least 5 calibration samples (${calibrationCount}/5) and 5 natural typing samples (${naturalCount}/5).`,
       code: "INSUFFICIENT_SAMPLES",
+      calibrationCount,
+      naturalCount,
     });
     return;
   }
@@ -343,11 +650,26 @@ enrollmentRouter.post("/finalize", async (req: Request, res: Response): Promise<
   // Ensure model is built and saved completely
   try {
     const featureVectors = samples.map((s) => s.featureVector);
-    const buildResult = await mlClient.buildAndSaveModel(user._id.toString(), featureVectors);
+    const sampleTypes = samples.map((s) => s.sampleType || "calibration");
+    const buildResult = await mlClient.buildAndSaveModel(
+      user._id.toString(),
+      featureVectors,
+      ENROLLMENT_THRESHOLDS.DEFAULT_DISTANCE_THRESHOLD,
+      sampleTypes
+    );
+
+    // Verify model artifact can be retrieved and loaded from disk
+    const verifiedModel = await mlClient.getSavedModelInfo(user._id.toString());
+    if (!verifiedModel.exists) {
+      throw new Error("Serialized model verification failed: model artifact not loadable from disk.");
+    }
 
     if (profile) {
       profile.status = PROFILE_STATUS.READY_FOR_TESTING;
-      profile.enrollmentCount = count;
+      profile.enrollmentCount = samples.length;
+      profile.calibrationCount = calibrationCount;
+      profile.naturalCount = naturalCount;
+      profile.enrollmentStage = "complete";
       profile.isModelBuilt = true;
       profile.modelTrainedAt = new Date(buildResult.trainedAt);
       profile.modelSampleCount = buildResult.sampleCount;
@@ -358,21 +680,21 @@ enrollmentRouter.post("/finalize", async (req: Request, res: Response): Promise<
 
     res.json({
       ok: true,
-      message: "Enrolment finalised. Biometric model built and saved completely.",
+      message: "Enrolment finalised. Hybrid biometric model built and verified on disk.",
       profileStatus: PROFILE_STATUS.READY_FOR_TESTING,
       buildResult,
     });
   } catch (err: any) {
     if (profile) {
-      profile.status = PROFILE_STATUS.READY_FOR_TESTING;
-      profile.enrollmentCount = count;
+      profile.isModelBuilt = false;
       await profile.save();
     }
 
-    res.json({
-      ok: true,
-      message: "Enrolment finalised. Profile status updated.",
-      profileStatus: PROFILE_STATUS.READY_FOR_TESTING,
+    res.status(500).json({
+      ok: false,
+      error: `Model compilation failed: ${err.message}`,
+      code: "COMPILATION_FAILED",
+      profileStatus: profile?.status,
     });
   }
 });

@@ -11,6 +11,9 @@ export interface ITypingProfile extends Document {
   status: ProfileStatusType;
   featureSchemaVersion: string;
   enrollmentCount: number;
+  calibrationCount: number;
+  naturalCount: number;
+  enrollmentStage: string;
   modelVersion: string;
   isModelBuilt: boolean;
   modelTrainedAt?: Date;
@@ -44,6 +47,21 @@ const TypingProfileSchema = new Schema<ITypingProfile>(
       type: Number,
       default: 0,
       min: 0,
+    },
+    calibrationCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    naturalCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    enrollmentStage: {
+      type: String,
+      enum: ["calibration", "natural", "complete"],
+      default: "calibration",
     },
     modelVersion: {
       type: String,
